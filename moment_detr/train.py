@@ -127,7 +127,9 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
     with open(opt.train_log_filepath, "a") as f:
         f.write(to_write)
 
+    # ===== 시간 통계 로그 출력 =====
     logger.info("Epoch time stats:")
+    # dataloading, forward, backward 각각에 대해 max/min/avg 시간 요약 출력
     for name, meter in time_meters.items():
         d = {k: f"{getattr(meter, k):.4f}" for k in ["max", "min", "avg"]}
         logger.info(f"{name} ==> {d}")
