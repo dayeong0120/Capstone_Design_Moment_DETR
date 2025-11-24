@@ -41,7 +41,6 @@ def main():
     # -----------------------------
     device = "cuda" if torch.cuda.is_available() else "cpu"
     model, preprocess = clip.load(args.model, device=device)
-    model.float() #added
 
     os.makedirs(args.output_dir, exist_ok=True)
 
