@@ -24,6 +24,10 @@ from utils.model_utils import count_parameters
 import logging
 import sys
 
+LOG_EPOCHS = {0, 1, 3, 5, 20, 100, 199}
+matching_hist = None       # 각 epoch의 매칭 히스토그램
+is_training_phase = False  # 훈련 단계 여부
+
 print("[DEBUG] import moment_detr.train reached", file=sys.stderr)
 sys.stderr.flush()
 print(f"[DEBUG] __name__ = {__name__}")
@@ -42,6 +46,10 @@ def set_seed(seed, use_cuda=True):
 
 
 def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writer):
+    global matching_hist, is_training_phase
+
+    is_training_phase = True            # ← 훈련 중이라는 플래그 켜기
+    matching_hist = None                # ← 매 epoch마다 초기화
     logger.info(f"[Epoch {epoch_i+1}]")
 
     # 모델과 criterion을 학습모드로 전환 
@@ -131,6 +139,10 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
     for name, meter in time_meters.items():
         d = {k: f"{getattr(meter, k):.4f}" for k in ["max", "min", "avg"]}
         logger.info(f"{name} ==> {d}")
+    
+    if epoch_i in LOG_EPOCHS:
+        print(f"[Epoch {epoch_i}] Query matching histogram:")
+        print(matching_hist.tolist())
 
 
 def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset, opt):

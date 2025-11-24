@@ -315,6 +315,7 @@ class SetCriterion(nn.Module):
         return loss_map[loss](outputs, targets, indices, **kwargs)
 
     def forward(self, outputs, targets):
+        global matching_hist, is_training_phase
         """ This performs the loss computation.
         Parameters:
              outputs: dict of tensors, see the output specification of the model for the format
@@ -326,6 +327,30 @@ class SetCriterion(nn.Module):
         # Retrieve the matching between the outputs of the last layer and the targets
         # list(tuples), each tuple is (pred_span_indices, tgt_span_indices)
         indices = self.matcher(outputs_without_aux, targets)
+
+        # ---------------------- [추가] 쿼리 인덱스 히스토그램 누적 ------------------
+        # 첫 배치에서 쿼리 개수(num_queries)를 동적으로 결정
+        if is_training_phase:
+            if matching_hist is None:
+                # outputs의 query dimension을 이용해서 쿼리 개수 추출
+                # pred_spans: [batch_size, num_queries, 2] 같은 형태라고 가정
+                num_queries = outputs["pred_spans"].shape[1]
+
+                # 각 쿼리 인덱스(0 ~ num_queries-1)가 몇 번 매칭되는지 셀 히스토그램
+                matching_hist = torch.zeros(num_queries, dtype=torch.long)
+
+            # indices는 보통 배치 크기만큼의 리스트이고,
+            # 각 원소는 (idx_pred, idx_gt) 형태의 튜플
+            #   idx_pred: 이 배치에서 GT와 매칭된 query index들 (1D tensor)
+            #   idx_gt  : 해당하는 GT index들 (여긴 안 써도 됨)
+            for (idx_pred, idx_gt) in indices:
+                # idx_pred 안에 들어있는 각 query index를 순회하면서
+                # 해당 쿼리가 매칭된 횟수를 +1 해준다.
+                for q in idx_pred: # idx_pred = tensor([3, 7])
+                    q_idx = int(q.item())   # tensor형태로 되어있는 query 인덱스를  → 파이썬 int로 변환
+                    matching_hist[q_idx] += 1
+        # ---------------------------------------------------------------------
+
 
         # Compute all the requested losses
         losses = {}
