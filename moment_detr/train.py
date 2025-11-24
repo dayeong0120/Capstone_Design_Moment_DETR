@@ -24,9 +24,6 @@ from utils.model_utils import count_parameters
 import logging
 import sys
 
-NUM_QUERIES = 10   # config에서 가져와도 됨
-global_fg_match_count = torch.zeros(NUM_QUERIES, dtype=torch.long)
-global_total_match_count = 0
 print("[DEBUG] import moment_detr.train reached", file=sys.stderr)
 sys.stderr.flush()
 print(f"[DEBUG] __name__ = {__name__}")
@@ -46,56 +43,87 @@ def set_seed(seed, use_cuda=True):
 
 def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writer):
     logger.info(f"[Epoch {epoch_i+1}]")
+
+    # 모델과 criterion을 학습모드로 전환 
     model.train()
     criterion.train()
 
     # init meters
-    time_meters = defaultdict(AverageMeter)
-    loss_meters = defaultdict(AverageMeter)
+    time_meters = defaultdict(AverageMeter) # 시간 측정을 위한 meter들을 저장할 딕셔너리
+    loss_meters = defaultdict(AverageMeter)  # 손실 값들을 저장할 meter 딕셔너리
 
-    num_training_examples = len(train_loader)
-    timer_dataloading = time.time()
-    for batch_idx, batch in tqdm(enumerate(train_loader),
-                                 desc="Training Iteration",
-                                 total=num_training_examples):
+    num_training_examples = len(train_loader) # train_loader 전체 배치 개수 (tqdm 프로그레스바 total 설정에 사용)
+    timer_dataloading = time.time() # 첫 배치 로딩 시작 시각 기록
+    
+    # train_loader에서 배치를 하나씩 꺼내면서 학습 루프 수행
+    for batch_idx, batch in tqdm(
+            enumerate(train_loader), # 배치 인덱스와 배치 데이터
+            desc="Training Iteration", # tqdm 진행바 앞에 붙는 설명 문구
+            total=num_training_examples # 전체 반복 횟수(배치 수)
+        ):
+        # 직전 배치부터 지금까지 걸린 dataloading 시간 측정 및 누적
         time_meters["dataloading_time"].update(time.time() - timer_dataloading)
 
-        timer_start = time.time()
+        # ----------- 입력 준비 -----------
+        timer_start = time.time() # 입력 준비(전처리, GPU 이동 등) 시작 시간 기록
         model_inputs, targets = prepare_batch_inputs(batch[1], opt.device, non_blocking=opt.pin_memory)
-        time_meters["prepare_inputs_time"].update(time.time() - timer_start)
+        time_meters["prepare_inputs_time"].update(time.time() - timer_start) # 입력 준비에 걸린 시간 측정 및 누적
+        # --------------------------------
 
+        # ----------- 모델 forward (모델에 입력 넣어 예측 결과 생성 및 loss 계산) -----------
         timer_start = time.time()
-        outputs = model(**model_inputs)
+        outputs = model(**model_inputs)  # 모델에 입력을 넣어 예측 결과(outputs) 생성
+        # criterion을 통해 outputs와 targets로부터 개별 loss 항목들을 계산 (dict 형태)
         loss_dict = criterion(outputs, targets)
-        weight_dict = criterion.weight_dict
+        weight_dict = criterion.weight_dict # 각 loss에 곱해줄 가중치 딕셔너리
+        # 전체 손실
         losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
         time_meters["model_forward_time"].update(time.time() - timer_start)
+        # -----------------------------------------------------------------------------
 
+        # ----------- backward (역전파) -----------
         timer_start = time.time()
-        optimizer.zero_grad()
+        optimizer.zero_grad() # 기존에 계산되어 있던 gradient 초기화
+        # 전체 손실(losses)에 대해 역전파 수행 → 각 파라미터에 gradient 계산
         losses.backward()
+        # gradient clip 설정이 되어 있으면, gradient norm을 opt.grad_clip 값으로 제한
         if opt.grad_clip > 0:
             nn.utils.clip_grad_norm_(model.parameters(), opt.grad_clip)
+        # optimizer를 한 스텝 진행시켜 파라미터 업데이트
         optimizer.step()
         time_meters["model_backward_time"].update(time.time() - timer_start)
+        # ----------------------------------------
 
+        # 전체 손실 값을 float로 변환해 logging용으로 loss_dict에 추가
         loss_dict["loss_overall"] = float(losses)  # for logging only
+        # 각 loss 항목을 loss_meters에 누적해서 에폭 단위 평균을 계산하기 위함
         for k, v in loss_dict.items():
+            # weight_dict에 있는 손실은 가중치가 곱해진 값을 기준으로 로깅
+            # weight_dict에 없는 손실은 있는 그대로 평균 내기
             loss_meters[k].update(float(v) * weight_dict[k] if k in weight_dict else float(v))
 
+        # 다음 배치 로딩 시간 측정을 위해 현재 시각을 저장
         timer_dataloading = time.time()
+        # debug 모드일 때, 3번째 배치까지만 돌리고 조기 종료 (빠른 디버깅용)
         if opt.debug and batch_idx == 3:
             break
 
+    # ========== 한 에폭이 끝난 후, TensorBoard에 로그 기록 ==========
     # print/add logs
+    # 현재 에폭의 learning rate를 TensorBoard에 기록
     tb_writer.add_scalar("Train/lr", float(optimizer.param_groups[0]["lr"]), epoch_i+1)
+    # loss_meters에 누적된 각 손실 항목의 평균을 TensorBoard에 기록
     for k, v in loss_meters.items():
         tb_writer.add_scalar("Train/{}".format(k), v.avg, epoch_i+1)
 
+    # 텍스트 로그 파일에 쓸 문자열 포맷 구성
     to_write = opt.train_log_txt_formatter.format(
-        time_str=time.strftime("%Y_%m_%d_%H_%M_%S"),
-        epoch=epoch_i+1,
-        loss_str=" ".join(["{} {:.4f}".format(k, v.avg) for k, v in loss_meters.items()]))
+        time_str=time.strftime("%Y_%m_%d_%H_%M_%S"),  # 기록 시각 문자열
+        epoch=epoch_i+1, # 에폭 번호
+        # "loss_name value" 형태의 문자열들을 공백으로 이어붙인 것
+        loss_str=" ".join(["{} {:.4f}".format(k, v.avg) for k, v in loss_meters.items()])
+    )
+    # 학습 로그 텍스트 파일에 append 모드로 기록
     with open(opt.train_log_filepath, "a") as f:
         f.write(to_write)
 
@@ -137,7 +165,7 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
     else:
         start_epoch = opt.start_epoch
     save_submission_filename = "latest_{}_{}_preds.jsonl".format(opt.dset_name, opt.eval_split_name)
-    for epoch_i in trange(start_epoch, opt.n_epoch, desc="Epoch"):
+    for epoch_i in trange(start_epoch, opt.n_epoch, desc="Epoch"): # 0부터 시작 
         if epoch_i > -1:
             train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writer)
             lr_scheduler.step()
