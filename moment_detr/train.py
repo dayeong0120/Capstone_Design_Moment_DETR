@@ -22,6 +22,14 @@ from utils.model_utils import count_parameters
 
 
 import logging
+import sys
+
+NUM_QUERIES = 10   # config에서 가져와도 됨
+global_fg_match_count = torch.zeros(NUM_QUERIES, dtype=torch.long)
+global_total_match_count = 0
+print("[DEBUG] import moment_detr.train reached", file=sys.stderr)
+sys.stderr.flush()
+print(f"[DEBUG] __name__ = {__name__}")
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(message)s",
                     datefmt="%Y-%m-%d %H:%M:%S",
@@ -98,6 +106,11 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
 
 
 def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset, opt):
+    print("[DEBUG] Check in stderr.", file=sys.stderr)
+    logger.info(f"Train dataset size: {len(train_dataset)}")
+    if val_dataset is not None:
+        logger.info(f"Val dataset size: {len(val_dataset)}")
+
     if opt.device.type == "cuda":
         logger.info("CUDA enabled.")
         model.to(opt.device)
@@ -115,7 +128,7 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
         shuffle=True,
         pin_memory=opt.pin_memory
     )
-
+    logger.info(f"Train loader batches: {len(train_loader)}")
     prev_best_score = 0.
     es_cnt = 0
     # start_epoch = 0
@@ -204,6 +217,7 @@ def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset,
 
 
 def start_training():
+    print("[DEBUG] alive train.start_training", flush=True) #Debugging
     logger.info("Setup config, data and model...")
     opt = BaseOptions().parse()
     set_seed(opt.seed)
@@ -247,11 +261,15 @@ def start_training():
     logger.info(f"Model {model}")
     count_parameters(model)
     logger.info("Start Training...")
-    train(model, criterion, optimizer, lr_scheduler, train_dataset, eval_dataset, opt)
+    print("[DEBUG] alive2", flush=True) #Debugging
+    print("[DEBUG] len(train_dataset) =", len(train_dataset), flush=True) #Debugging
+    print("[DEBUG] len(eval_dataset) =", len(eval_dataset), flush=True) #Debugging
+    train(model, criterion, optimizer, lr_scheduler, train_dataset, eval_dataset, opt) #Here is the problem!!!
     return opt.ckpt_filepath.replace(".ckpt", "_best.ckpt"), opt.eval_split_name, opt.eval_path, opt.debug
 
 
-if __name__ == '__main__':
+if __name__ in ('__main__', 'moment_detr.train'):
+    print("[DEBUG] alive train.main", flush=True) #Debugging
     best_ckpt_path, eval_split_name, eval_path, debug = start_training()
     if not debug:
         input_args = ["--resume", best_ckpt_path,
@@ -264,3 +282,12 @@ if __name__ == '__main__':
         logger.info("Evaluating model at {}".format(best_ckpt_path))
         logger.info("Input args {}".format(sys.argv[1:]))
         start_inference()
+
+
+import atexit, traceback
+
+def goodbye():
+    print("[DEBUG] program exiting", file=sys.stderr)
+    traceback.print_stack(file=sys.stderr)
+
+atexit.register(goodbye)

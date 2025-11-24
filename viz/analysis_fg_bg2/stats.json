@@ -1,0 +1,22 @@
+{
+  "total_rows": 15500,
+  "conf_thresh": 0.5,
+  "fg_iou_bad": 0.3,
+  "bg_iou_good": 0.5,
+  "counts": {
+    "fg": 3002,
+    "bg": 12498,
+    "fg_confident_wrong": 0,
+    "bg_missed_hit": 945
+  },
+  "means": {
+    "iou_all": 0.16306804022384241,
+    "iou_fg": 0.35843409429140893,
+    "iou_bg": 0.11614142041980698
+  },
+  "medians": {
+    "iou_all": 0.0,
+    "iou_fg": 0.30495169082125606,
+    "iou_bg": 0.0
+  }
+}

@@ -4,6 +4,7 @@ import numpy as np
 from tqdm import tqdm
 import random
 import logging
+import os #for logging
 from os.path import join, exists
 from utils.basic_utils import load_jsonl, l2_normalize_np_array
 from utils.tensor_utils import pad_sequences_1d
@@ -51,21 +52,61 @@ class StartEndDataset(Dataset):
         self.txt_drop_ratio = txt_drop_ratio
         if "val" in data_path or "test" in data_path:
             assert txt_drop_ratio == 0
-
         # checks
         assert q_feat_type in self.Q_FEAT_TYPES
-
         # data
         self.data = self.load_data()
 
-    def load_data(self):
+
+
+    '''def load_data(self):
         datalist = load_jsonl(self.data_path)
         if self.data_ratio != 1:
             n_examples = int(len(datalist) * self.data_ratio)
             datalist = datalist[:n_examples]
             logger.info("Using {}% of the data: {} examples"
                         .format(self.data_ratio * 100, n_examples))
-        return datalist
+        return datalist'''
+
+    # 결손 데이터 생략 Ver
+    def load_data(self):
+        datalist = load_jsonl(self.data_path)
+
+        if self.data_ratio != 1:
+            n_examples = int(len(datalist) * self.data_ratio)
+            datalist = datalist[:n_examples]
+            logger.info("Using {:.1f}% of the data: {} examples".format(self.data_ratio * 100, n_examples))
+
+        valid_data = []
+        missing_count = 0
+
+        for d in datalist:
+            vid = d.get("vid")
+            qid = d.get("qid")
+
+            # --- 비디오 feature 체크 ---
+            v_missing = False
+            for v_dir in self.v_feat_dirs:
+                v_path = os.path.join(v_dir, f"{vid}.npz")
+                if not os.path.exists(v_path):
+                    v_missing = True
+                    break
+
+            # --- 텍스트 feature 체크 ---
+            t_path = os.path.join(self.q_feat_dir, f"qid{qid}.npz")
+            t_missing = not os.path.exists(t_path)
+
+            # --- 결손 데이터 처리 ---
+            if v_missing or t_missing:
+                missing_count += 1
+                print(f"[WARN] Missing feature(s) for sample: vid={vid}, qid={qid}", flush=True)
+                continue
+
+            valid_data.append(d)
+
+        logger.info(f"[INFO] Loaded {len(valid_data)} valid samples (skipped {missing_count} missing)")
+        return valid_data
+
 
     def __len__(self):
         return len(self.data)

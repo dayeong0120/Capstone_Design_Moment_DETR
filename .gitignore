@@ -46,3 +46,36 @@ credentials
 .Trashes
 ehthumbs.db
 Thumbs.db
+
+
+# ========= Moment-DETR Project Specific Ignore ========
+
+# Checkpoints, models
+ckpt/
+*.pth
+*.pt
+*.ckpt
+*.bin
+
+# Data & annotations
+data/
+res/
+results/
+
+# Logs & tensorboard
+logs/
+tensorboard/
+runs/
+
+# Temporary / output folders
+.out/
+run_on_video/
+standalone_eval/
+
+# IDE & SFTP configs
+.vscode/
+sftp.json
+
+# Python caches
+__pycache__/
+*.pyc
