@@ -29,6 +29,7 @@ matching_hist = None       # 각 epoch의 매칭 히스토그램
 is_training_phase = False  # 훈련 단계 여부
 IOU_MISMATCH_BUFFER = []   # IoU 높은데 매칭 실패한 케이스 임시 저장
 QUERY_MISMATCH_COUNT = None    # 쿼리별 mismatch 횟수 저장용
+QUERY_FG_SCORES = None
 
 print("[DEBUG] import moment_detr.train reached", file=sys.stderr)
 sys.stderr.flush()
@@ -48,12 +49,13 @@ def set_seed(seed, use_cuda=True):
 
 
 def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writer):
-    global matching_hist, is_training_phase, IOU_MISMATCH_BUFFER, QUERY_MISMATCH_COUNT
+    global matching_hist, is_training_phase, IOU_MISMATCH_BUFFER, QUERY_MISMATCH_COUNT, QUERY_FG_SCORES
 
     is_training_phase = True            # ← 훈련 중이라는 플래그 켜기
     matching_hist = None                # ← 매 epoch마다 초기화
     IOU_MISMATCH_BUFFER = [] 
     QUERY_MISMATCH_COUNT = None
+    QUERY_FG_SCORES = None
     logger.info(f"[Epoch {epoch_i+1}]")
 
     # 모델과 criterion을 학습모드로 전환 
@@ -175,6 +177,19 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                     **entry
                 }
                 f.write(json.dumps(rec) + "\n")
+
+            # 4) Query FG Score 평균
+            if QUERY_FG_SCORES is not None:
+                fg_avg = [
+                    float(sum(vals) / len(vals)) if len(vals) > 0 else 0.0
+                    for vals in QUERY_FG_SCORES
+                ]
+
+                f.write(json.dumps({
+                    "type": "query_fg_avg",
+                    "epoch": epoch_i,
+                    "fg_avg": fg_avg
+                }) + "\n")
 
         # next epoch 위해 버퍼 비우기
         IOU_MISMATCH_BUFFER.clear()

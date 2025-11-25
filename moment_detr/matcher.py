@@ -93,6 +93,23 @@ class HungarianMatcher(nn.Module):
         # 즉 out_prob[q] = [p_fg, p_bg]는 쿼리 q의 fg, bg일 확률 
         out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
 
+        # ------------------------------------------
+        # [추가] Query FG score 기록
+        global QUERY_FG_SCORES
+
+        # out_prob: shape [bs*num_queries, 2]
+        # reshape to [bs, num_queries, 2]
+        fg_scores = out_prob.view(bs, num_queries, 2)[..., 1]   # foreground score
+
+        # 초기화: 쿼리 개수에 맞춰 리스트 생성
+        if QUERY_FG_SCORES is None:
+            QUERY_FG_SCORES = [[] for _ in range(num_queries)]
+
+        # 각 batch(사실 bs=1) & query별 score 누적
+        for q in range(num_queries):
+            QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
+        # ------------------------------------------
+
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
         tgt_spans = torch.cat([v["spans"] for v in targets])  # [num_target_spans in batch, 2]
         # 모든 GT 스팬의 클래스는 0(foreground)임. GT 스팬의 수만큼 0을 채운 리스트. tgt_ids = [0, 0, 0, ..., 0]
