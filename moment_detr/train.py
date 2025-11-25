@@ -24,7 +24,7 @@ from utils.model_utils import count_parameters
 import logging
 import sys
 
-LOG_EPOCHS = {0, 1, 3, 5, 20, 100, 199}
+LOG_EPOCHS = {0, 1, 2, 3, 5, 7, 10, 20, 50, 100, 150, 199}
 matching_hist = None       # 각 epoch의 매칭 히스토그램
 is_training_phase = False  # 훈련 단계 여부
 IOU_MISMATCH_BUFFER = []   # IoU 높은데 매칭 실패한 케이스 임시 저장
