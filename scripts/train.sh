@@ -2,12 +2,12 @@ dset_name=hl
 ctx_mode=video_tef
 v_feat_types=slowfast_clip
 t_feat_type=clip 
-results_root=/data/hsg0113/repos/moment_detr/results
+results_root=/data/hsg0113/repos/cap_detr/results
 exp_id=exp
 
 ######## data paths
-train_path=/data/hsg0113/repos/moment_detr/data/highlight_train_release.jsonl
-eval_path=/data/hsg0113/repos/moment_detr/data/highlight_val_release.jsonl
+train_path=/data/hsg0113/repos/cap_detr/data/highlight_train_release.jsonl
+eval_path=/data/hsg0113/repos/cap_detr/data/highlight_val_release.jsonl
 eval_split_name=val
 
 ######## setup video+text features
@@ -48,24 +48,24 @@ echo "[INFO] v_feat_dirs=${v_feat_dirs[@]}"
 echo "[INFO] t_feat_dir=${t_feat_dir}"
 
 echo "[DEBUG] Checking Python entrypoint..."
-python -c "print('>>> Running moment_detr/train.py manual test OK')"
+python -c "print('>>> Running cap_detr/train.py manual test OK')"
 
-echo "[INFO] Starting Moment-DETR training..."
-PYTHONPATH=$PYTHONPATH:/data/hsg0113/repos/moment_detr python - <<EOF
+echo "[INFO] Starting Cap-DETR training..."
+PYTHONPATH=$PYTHONPATH:/data/hsg0113/repos/cap_detr python - <<EOF
 import sys
 sys.argv = [
   "train.py",
   "--dset_name", "hl",
   "--ctx_mode", "video_tef",
-  "--train_path", "/data/hsg0113/repos/moment_detr/data/highlight_train_release.jsonl",
-  "--eval_path", "/data/hsg0113/repos/moment_detr/data/highlight_val_release.jsonl",
+  "--train_path", "/data/hsg0113/repos/cap_detr/data/highlight_train_release.jsonl",
+  "--eval_path", "/data/hsg0113/repos/cap_detr/data/highlight_val_release.jsonl",
   "--eval_split_name", "val",
   "--v_feat_dirs", "/tmp/hsg0113_features_${SLURM_JOB_ID}/features/slowfast_features", "/tmp/hsg0113_features_${SLURM_JOB_ID}/features/clip_features",
   "--v_feat_dim", "2816",
   "--t_feat_dir", "${t_feat_dir}",          # ✅ train & eval 동일
   "--t_feat_dim", "512",
   "--bsz", "32",
-  "--results_root", "/data/hsg0113/repos/moment_detr/results",
+  "--results_root", "/data/hsg0113/repos/cap_detr/results",
   "--exp_id", "exp_qvh_features_${SLURM_JOB_ID}"
 ]
 from moment_detr.train import start_training
