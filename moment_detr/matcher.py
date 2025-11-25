@@ -217,7 +217,70 @@ class HungarianMatcher(nn.Module):
             video0의 query3는 GT span0으로 매칭 
         """
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
-        
+
+        # ------------------------------------------
+        # [추가] IoU 높지만 매칭되지 않은 query 기록
+        # ------------------------------------------
+        IOU_THRESH = 0.5
+
+        iou_mismatch_list = []  # 이번 매칭 결과에서 발견된 mismatch를 저장할 리스트
+
+        # cost_giou는 "-IoU" 형태의 값이므로 반대로 부호를 바꾸면 IoU 값이 됨
+        # cost_giou shape: (bs * num_queries, total_spans)
+        # reshape해서 batch 단위로 보기 쉽게 만들기
+        giou_mat = -cost_giou.view(bs, num_queries, -1)  
+        # 즉 giou_mat[b][q][gi] = batch b, query q, GT gi 사이의 IoU 값
+
+        # 각 cost도 batch 단위로 보기 쉽게 reshape (비교/기록용)
+        cost_class_b = cost_class.view(bs, num_queries, -1)
+        cost_span_b  = cost_span.view(bs, num_queries, -1)
+        cost_giou_b  = cost_giou.view(bs, num_queries, -1)
+        C_b          = C  # 최종 cost matrix는 이미 (bs, num_queries, total_spans) 형태
+
+        # 각 배치마다 반복
+        for b, (pred_idx, tgt_idx) in enumerate(indices):
+            # pred_idx: 이번 영상에서 매칭된 query index 리스트
+            matched = set(pred_idx.tolist())
+            # 이번 배치의 GT 개수
+            num_gt = len(targets[b]["spans"])
+
+            # 모든 query에 대해 검사
+            for q in range(num_queries):
+                # 이미 매칭된 query는 mismatch 후보 아님 → skip
+                if q in matched:
+                    continue
+
+                # 매칭되지 않은 query가 어떤 GT와 IoU가 높은지 확인
+                for gi in range(num_gt):
+                     # IoU 값 가져오기
+                    iou = float(giou_mat[b, q, gi])
+                    # IoU가 threshold 이상인데 매칭 실패 → 문제 케이스
+                    if iou >= IOU_THRESH:
+                        # 상세 cost breakdown 포함해서 기록
+                        iou_mismatch_list.append({
+                            "batch": b, # 배치 index
+                            "query": q, # 매칭 실패한 query index
+                            "gt": gi, # IoU가 높은 GT index
+                            "iou": iou, # IoU 값
+                            "class_cost": float(cost_class_b[b, q, gi]),
+                            "l1_cost": float(cost_span_b[b, q, gi]),
+                            "giou_cost": float(cost_giou_b[b, q, gi]),
+                            "final_cost": float(C_b[b, q, gi]), # IoU 값
+                        })
+
+        # Option 1: 전역 리스트에 저장 (추천)
+        global IOU_MISMATCH_BUFFER, QUERY_MISMATCH_COUNT
+        IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
+
+        # 쿼리 개수만큼 카운터 리스트 초기화
+        if QUERY_MISMATCH_COUNT is None:
+            QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
+
+        # 쿼리별 mismatch 카운트 반영 
+        for entry in iou_mismatch_list:
+            q = entry["query"]
+            QUERY_MISMATCH_COUNT[q] += 1
+
         # 이 numpy 배열들을 torch 텐서로 감싸서 반환
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 

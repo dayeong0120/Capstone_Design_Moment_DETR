@@ -350,8 +350,7 @@ class SetCriterion(nn.Module):
                     q_idx = int(q.item())   # tensor형태로 되어있는 query 인덱스를  → 파이썬 int로 변환
                     matching_hist[q_idx] += 1
         # ---------------------------------------------------------------------
-
-
+       
         # Compute all the requested losses
         losses = {}
         for loss in self.losses:

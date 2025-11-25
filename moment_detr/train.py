@@ -27,6 +27,8 @@ import sys
 LOG_EPOCHS = {0, 1, 3, 5, 20, 100, 199}
 matching_hist = None       # 각 epoch의 매칭 히스토그램
 is_training_phase = False  # 훈련 단계 여부
+IOU_MISMATCH_BUFFER = []   # IoU 높은데 매칭 실패한 케이스 임시 저장
+QUERY_MISMATCH_COUNT = None    # 쿼리별 mismatch 횟수 저장용
 
 print("[DEBUG] import moment_detr.train reached", file=sys.stderr)
 sys.stderr.flush()
@@ -46,10 +48,12 @@ def set_seed(seed, use_cuda=True):
 
 
 def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writer):
-    global matching_hist, is_training_phase
+    global matching_hist, is_training_phase, IOU_MISMATCH_BUFFER, QUERY_MISMATCH_COUNT
 
     is_training_phase = True            # ← 훈련 중이라는 플래그 켜기
     matching_hist = None                # ← 매 epoch마다 초기화
+    IOU_MISMATCH_BUFFER = [] 
+    QUERY_MISMATCH_COUNT = None
     logger.info(f"[Epoch {epoch_i+1}]")
 
     # 모델과 criterion을 학습모드로 전환 
@@ -141,8 +145,39 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         logger.info(f"{name} ==> {d}")
     
     if epoch_i in LOG_EPOCHS:
-        print(f"[Epoch {epoch_i}] Query matching histogram:")
-        print(matching_hist.tolist())
+        os.makedirs("logs_hungarian", exist_ok=True)  # 로그 저장용 폴더 생성
+
+        # 파일명 (epoch 단위)
+        save_path = f"logs_hungarian/epoch_debug_{epoch_i}.jsonl"
+        with open(save_path, "w") as f:
+
+            # 1) Query Matching Histogram
+            if matching_hist is not None:
+                f.write(json.dumps({
+                    "type": "matching_hist",
+                    "epoch": epoch_i,
+                    "hist": matching_hist.tolist()
+                }) + "\n")
+
+            # 2) Query Mismatch Count
+            if QUERY_MISMATCH_COUNT is not None:
+                f.write(json.dumps({
+                    "type": "query_mismatch_count",
+                    "epoch": epoch_i,
+                    "count": QUERY_MISMATCH_COUNT
+                }) + "\n")
+
+            # 3) IoU Mismatch Detailed Logs
+            for entry in IOU_MISMATCH_BUFFER:
+                rec = {
+                    "type": "iou_mismatch",
+                    "epoch": epoch_i,
+                    **entry
+                }
+                f.write(json.dumps(rec) + "\n")
+
+        # next epoch 위해 버퍼 비우기
+        IOU_MISMATCH_BUFFER.clear()
 
 
 def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset, opt):
