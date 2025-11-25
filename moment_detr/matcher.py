@@ -105,9 +105,10 @@ class HungarianMatcher(nn.Module):
         if QUERY_FG_SCORES is None:
             QUERY_FG_SCORES = [[] for _ in range(num_queries)]
 
-        # 각 batch(사실 bs=1) & query별 score 누적
-        for q in range(num_queries):
-            QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
+        # 각 batch & query별 score 누적
+        for b in range(bs):
+            for q in range(num_queries):
+                QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
         # ------------------------------------------
 
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
