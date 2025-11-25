@@ -190,6 +190,15 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                     "epoch": epoch_i,
                     "fg_avg": fg_avg
                 }) + "\n")
+            
+            # 5) Query Norm (L2 norm of query embeddings)
+            query_norms = model.query_embed.weight.norm(dim=1).detach().cpu().tolist()
+
+            f.write(json.dumps({
+                "type": "query_norms",
+                "epoch": epoch_i,
+                "query_norms": query_norms
+            }) + "\n")
 
         # next epoch 위해 버퍼 비우기
         IOU_MISMATCH_BUFFER.clear()
