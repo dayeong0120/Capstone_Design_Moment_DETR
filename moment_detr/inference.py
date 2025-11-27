@@ -20,6 +20,7 @@ from utils.basic_utils import save_jsonl, save_json
 from utils.temporal_nms import temporal_nms
 
 import logging
+import moment_detr.logging_state as LOG
 
 logger = logging.getLogger(__name__)
 logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(message)s",
@@ -174,8 +175,7 @@ def get_eval_res(model, eval_loader, opt, epoch_i, criterion, tb_writer):
 
 
 def eval_epoch(model, eval_dataset, opt, save_submission_filename, epoch_i=None, criterion=None, tb_writer=None):
-    global is_training_phase
-    is_training_phase = False
+    LOG.is_training_phase = False
     logger.info("Generate submissions")
     model.eval()
     if criterion is not None and eval_dataset.load_labels:

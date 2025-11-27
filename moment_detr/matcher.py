@@ -8,6 +8,8 @@ from torch import nn
 import torch.nn.functional as F
 from moment_detr.span_utils import generalized_temporal_iou, span_cxw_to_xx
 
+import moment_detr.logging_state as LOG
+
 """
 문제 상황: 하나의 영상에서 모델이 num_queries개(보통 10개 정도)의 구간(스팬)을 예측하고, GT(정답 스팬)는 보통 그보다 적은 개수 존재
 
@@ -95,20 +97,19 @@ class HungarianMatcher(nn.Module):
 
         # ------------------------------------------
         # [추가] Query FG score 기록
-        global QUERY_FG_SCORES
 
         # out_prob: shape [bs*num_queries, 2]
         # reshape to [bs, num_queries, 2]
         fg_scores = out_prob.view(bs, num_queries, 2)[..., 1]   # foreground score
 
         # 초기화: 쿼리 개수에 맞춰 리스트 생성
-        if QUERY_FG_SCORES is None:
-            QUERY_FG_SCORES = [[] for _ in range(num_queries)]
+        if LOG.QUERY_FG_SCORES is None:
+            LOG.QUERY_FG_SCORES = [[] for _ in range(num_queries)]
 
         # 각 batch & query별 score 누적
         for b in range(bs):
             for q in range(num_queries):
-                QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
+                LOG.QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
         # ------------------------------------------
 
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
@@ -287,17 +288,16 @@ class HungarianMatcher(nn.Module):
                         })
 
         # Option 1: 전역 리스트에 저장 (추천)
-        global IOU_MISMATCH_BUFFER, QUERY_MISMATCH_COUNT
-        IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
+        LOG.IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
 
         # 쿼리 개수만큼 카운터 리스트 초기화
-        if QUERY_MISMATCH_COUNT is None:
-            QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
+        if LOG.QUERY_MISMATCH_COUNT is None:
+            LOG.QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
 
         # 쿼리별 mismatch 카운트 반영 
         for entry in iou_mismatch_list:
             q = entry["query"]
-            QUERY_MISMATCH_COUNT[q] += 1
+            LOG.QUERY_MISMATCH_COUNT[q] += 1
 
         # 이 numpy 배열들을 torch 텐서로 감싸서 반환
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
