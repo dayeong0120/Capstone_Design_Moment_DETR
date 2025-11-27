@@ -8,6 +8,13 @@ from torch import nn
 import torch.nn.functional as F
 from moment_detr.span_utils import generalized_temporal_iou, span_cxw_to_xx
 
+"""
+문제 상황: 하나의 영상에서 모델이 num_queries개(보통 10개 정도)의 구간(스팬)을 예측하고, GT(정답 스팬)는 보통 그보다 적은 개수 존재
+
+목표: “예측 스팬 vs GT 스팬” 사이의 1:1 매칭을 찾아서, 어떤 쿼리가 어떤 GT를 책임질지 정하는 것
+
+방법: 각 (예측, GT) 쌍마다 “코스트(= 안좋은 정도)”를 계산 → 이걸 행렬로 만든 뒤 → **헝가리안 알고리즘(LSAP)**으로 전체 코스트 합이 최소가 되는 매칭을 찾음
+"""
 
 class HungarianMatcher(nn.Module):
     """This class computes an assignment between the targets and the predictions of the network
@@ -33,7 +40,7 @@ class HungarianMatcher(nn.Module):
         self.foreground_label = 0
         assert cost_class != 0 or cost_span != 0 or cost_giou != 0, "all costs cant be 0"
 
-    @torch.no_grad()
+    @torch.no_grad() # 매칭 단계에서는 gradient 계산 필요 없으므로 비활성화
     def forward(self, outputs, targets):
         """ Performs the matching
 
@@ -42,10 +49,23 @@ class HungarianMatcher(nn.Module):
                  "pred_spans": Tensor of dim [batch_size, num_queries, 2] with the predicted span coordinates,
                     in normalized (cx, w) format
                  ""pred_logits": Tensor of dim [batch_size, num_queries, num_classes] with the classification logits
+            
+                모델의 예측 결과를 담은 dict.
+                포함되는 키:
+                    - "pred_spans": 텐서 형태 [batch_size, num_queries, 2]
+                        모델이 예측한 구간(span). (cx, w) 정규화 좌표 형식.
+                    - "pred_logits": 텐서 형태 [batch_size, num_queries, num_classes]
+                        각 query에 대한 클래스 로짓 값. (이 query가 FG인지 BG인지”를 나타내는 softmax 이전 점수!)
 
             targets: This is a list of targets (len(targets) = batch_size), where each target is a dict containing:
                  "spans": Tensor of dim [num_target_spans, 2] containing the target span coordinates. The spans are
                     in normalized (cx, w) format
+                길이가 배치 사이즈인 dict 또는 리스트 
+                - targets["span_labels"]안에 spans라는 키의 dict가 원소 
+                - "spans"의 값 : 텐서 형태 [num_target_spans, 2]
+                    정답 구간(span). (cx, w) 정규화 형식.
+
+                => 즉, 각 배치의 GT 스팬 목록 
 
         Returns:
             A list of size batch_size, containing tuples of (index_i, index_j) where:
@@ -53,31 +73,87 @@ class HungarianMatcher(nn.Module):
                 - index_j is the indices of the corresponding selected targets (in order)
             For each batch element, it holds:
                 len(index_i) = len(index_j) = min(num_queries, num_target_spans)
+            길이가 batch_size인 리스트를 반환.
+            각 원소는 (index_i, index_j) 형태의 튜플이며,
+                - index_i: 매칭된 "예측 query 인덱스" 리스트
+                - index_j: 매칭된 "GT span 인덱스" 리스트
+              두 리스트는 같은 길이를 가지며,
+              길이는 min(num_queries, num_target_spans).
+
+            즉, 각 배치마다:
+                예측 스팬 중 일부를 GT 스팬과 1:1로 매칭한 결과를 반환.
+                매칭되지 않은 예측 query는 BG(no-object)로 간주됨.
         """
-        bs, num_queries = outputs["pred_spans"].shape[:2]
-        targets = targets["span_labels"]
+        bs, num_queries = outputs["pred_spans"].shape[:2] # bs는 batch size 
+        targets = targets["span_labels"] # 길이가 batch_size인 리스트, 각 원소는 {"spans": Tensor(...)} 형태
 
         # Also concat the target labels and spans
+
+        # 각 query에 대해 softmax로 클래스 확률 계산 
+        # 즉 out_prob[q] = [p_fg, p_bg]는 쿼리 q의 fg, bg일 확률 
         out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
+
+        # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
         tgt_spans = torch.cat([v["spans"] for v in targets])  # [num_target_spans in batch, 2]
+        # 모든 GT 스팬의 클래스는 0(foreground)임. GT 스팬의 수만큼 0을 채운 리스트. tgt_ids = [0, 0, 0, ..., 0]
         tgt_ids = torch.full([len(tgt_spans)], self.foreground_label)   # [total #spans in the batch]
 
+        # classification cost 계산 부분
         # Compute the classification cost. Contrary to the loss, we don't use the NLL,
-        # but approximate it in 1 - prob[target class].
-        # The 1 is a constant that doesn't change the matching, it can be omitted.
+        # but approximate it in 1 - prob[target class]. 
+            # ㄴ 매칭에서는 1 - p(target_class)를 사용
+            # ㄴ FG일 확률이 높으면 cost가 낮아야 하므로 음수를 붙인다 
+        # The 1 is a constant that doesn't change the matching, it can be omitted. 
+            # ㄴ 실제로는 상수 1은 빼도 순위에는 영향이 없으므로, -p(target_class)만 사용
+
+        # out_prob[:, [0,0,0,0,0,0]] : out_prob의 모든 행을 선택하고, 열 0을 총 6번 고른다. 
+        # out_prob의 행은 쿼리 하나, 열은 0이 fg일 확률, 1이 bg일 확률이므로 
+        # 그림으로 보면 cost_class는
+        """
+        out_prob (20 × 2)의 형태 
+            query0: [p_fg, p_bg]
+            query1: [p_fg, p_bg]
+            ...
+            query19: [p_fg, p_bg]
+
+
+        tgt_ids = [0,0,0,0,0,0]
+
+        cost_class = out_prob[:, tgt_ids] 의 형태  (20 × 6)
+            query0 → [p_fg, p_fg, p_fg, p_fg, p_fg, p_fg]
+            query1 → [p_fg, p_fg, p_fg, p_fg, p_fg, p_fg]
+            query2 → [p_fg, p_fg, p_fg, p_fg, p_fg, p_fg]...
+        """
+
         cost_class = -out_prob[:, tgt_ids]  # [batch_size * num_queries, total #spans in the batch]
 
+
+        # --------------------------------
+        # 3. span cost + GIoU cost 계산
+        # --------------------------------
         if self.span_loss_type == "l1":
             # We flatten to compute the cost matrices in a batch
+            # out_spans: (bs, num_queries, 2) → (bs * num_queries, 2)
+            #   각 행은 "하나의 예측 쿼리 스팬(cx, w)"를 의미
             out_spans = outputs["pred_spans"].flatten(0, 1)  # [batch_size * num_queries, 2]
 
             # Compute the L1 cost between spans
+            # L1 거리 기반 코스트
+            # torch.cdist: 두 집합 사이의 pairwise 거리 계산
+            # cost_span의 한 행(row)은 하나의 query가 모든 GT span과 갖는 L1 거리 벡터 (bs * num_queries, total_spans)
             cost_span = torch.cdist(out_spans, tgt_spans, p=1)  # [batch_size * num_queries, total #spans in the batch]
 
             # Compute the giou cost between spans
             # [batch_size * num_queries, total #spans in the batch]
+            # GIoU 코스트
+            # span_cxw_to_xx: (cx, w) → (start, end)
+            # generalized_temporal_iou: [0,1] IoU 값을 리턴 (1이 best, 0이 worst)
+            # 비용이니까 -IoU 를 사용 (IoU가 클수록 코스트는 작아져야 함)
             cost_giou = - generalized_temporal_iou(span_cxw_to_xx(out_spans), span_cxw_to_xx(tgt_spans))
+        # L1만 쓰니까 안봐도 됨 
         else:
+            # span_loss_type이 "l1"이 아닌 경우: 스팬을 "분포"로 예측했다고 가정
+            # pred_spans: (bs, num_queries, max_v_l * 2)
             pred_spans = outputs["pred_spans"]  # (bsz, #queries, max_v_l * 2)
             pred_spans = pred_spans.view(bs * num_queries, 2, self.max_v_l).softmax(-1)  # (bsz * #queries, 2, max_v_l)
             cost_span = - pred_spans[:, 0][:, tgt_spans[:, 0]] - \
@@ -90,13 +166,59 @@ class HungarianMatcher(nn.Module):
             # giou
             cost_giou = 0
 
-        # Final cost matrix
+        # --------------------------------
+        # 4. 최종 cost matrix 구성
+        # --------------------------------
         # import ipdb; ipdb.set_trace()
+        # 최종 코스트 = 가중치 * (각 코스트 항목)
+        # 각 항목의 shape는 전부 (bs * num_queries, total_spans) 이므로 그대로 더할 수 있음
+        """
+        ✔ cost_span
+        → L1 거리 = 좌표 기반 거리
+        → 값 작을수록 GT와 비슷한 위치
+
+        ✔ cost_giou
+        → IoU 기반 거리 = 실제 구간의 겹침 정도
+        → IoU 높을수록 cost 낮아짐
+
+        ✔ cost_class
+        → query가 FG일 확률(=softmax 확률)을 cost에 반영
+        → FG 확률 낮은 query는 자동으로 매칭에서 밀림
+
+        span(L1): “중심과 너비 값이 GT와 얼마나 가까운가”
+        gIoU: “예측된 구간이 GT 구간을 얼마나 잘 덮는가(실제 겹침)”
+        """
         C = self.cost_span * cost_span + self.cost_giou * cost_giou + self.cost_class * cost_class
-        C = C.view(bs, num_queries, -1).cpu()
+        
+        # 하나의 cost matrix를 다시 영상 단위로 분리하는 과정 
+        # C: (bs * num_queries, total_spans) → (bs, num_queries, total_spans)
+        C = C.view(bs, num_queries, -1).cpu() # 헝가리안 알고리즘은 numpy 기반이라 CPU로 옮김
 
         sizes = [len(v["spans"]) for v in targets]
+
+        """
+        C.split(...) 결과 예시 (bs=3)
+            c0: (3, 10, 2)   # video0 GT span 2개
+            c1: (3, 10, 4)   # video1 GT span 4개
+            c2: (3, 10, 1)   # video2 GT span 1개
+
+        enumerate를 쓰면:
+            i=0, c=c0
+            i=1, c=c1
+            i=2, c=c2
+        즉 각 영상마다의 cost matrix를 헝가리안 알고리즘에 넣는다 
+
+        indices : (query_idx_list, gt_idx_list)의 배열. 
+            indices = [
+                (array([0, 3]), array([1, 0])),       # video0
+                (array([2, 7, 9]), array([0, 1, 2]))  # video1
+            ]  
+            video0의 query0는 GT span1로 매칭
+            video0의 query3는 GT span0으로 매칭 
+        """
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
+        
+        # 이 numpy 배열들을 torch 텐서로 감싸서 반환
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 
 

@@ -1,0 +1,169 @@
+#!/usr/bin/env python3
+"""
+Analyze Moment-DETR inference results (aggregate IoU version)
+
+- Computes IoU between predicted and ground-truth windows by
+  (total intersection length) / (total union length)
+- Handles multiple GT and predicted windows per sample.
+- Saves top 100 lowest IoU samples and histogram as PNG.
+"""
+
+import json
+import numpy as np
+import matplotlib
+matplotlib.use("Agg")  # headless (no GUI)
+import matplotlib.pyplot as plt
+from tqdm import tqdm
+from pathlib import Path
+
+
+# -------------------------------
+# IoU 계산 관련 함수
+# -------------------------------
+def merge_intervals(intervals):
+    """주어진 [s,e] 구간 리스트를 병합 (겹치는 구간 통합)"""
+    if not intervals:
+        return []
+    intervals = sorted(intervals, key=lambda x: x[0])
+    merged = [intervals[0]]
+    for s, e in intervals[1:]:
+        last_s, last_e = merged[-1]
+        if s <= last_e:  # overlap
+            merged[-1][1] = max(last_e, e)
+        else:
+            merged.append([s, e])
+    return merged
+
+
+def total_length(intervals):
+    """구간 리스트 전체 길이 합"""
+    return sum(e - s for s, e in intervals)
+
+
+def intersection_length(intervals_a, intervals_b):
+    """두 구간 리스트의 총 교집합 길이"""
+    inter = 0.0
+    for s1, e1 in intervals_a:
+        for s2, e2 in intervals_b:
+            inter += max(0.0, min(e1, e2) - max(s1, s2))
+    return inter
+
+
+def compute_global_iou(pred_windows, gt_windows):
+    """
+    전체 구간 기준 IoU:
+      (교집합 총합) / (합집합 총합)
+    """
+    if not pred_windows or not gt_windows:
+        return 0.0
+
+    # 병합된 구간으로 정규화
+    pred = merge_intervals([[float(s), float(e)] for s, e, *_ in pred_windows])
+    gt = merge_intervals([[float(s), float(e)] for s, e in gt_windows])
+
+    inter_len = intersection_length(pred, gt)
+    total_len = total_length(pred) + total_length(gt) - inter_len
+    return inter_len / total_len if total_len > 0 else 0.0
+
+
+# -------------------------------
+# JSONL 로드 함수
+# -------------------------------
+def load_jsonl(path):
+    with open(path) as f:
+        return [json.loads(line) for line in f]
+
+
+def load_gt_jsonl(path):
+    with open(path) as f:
+        return {d["qid"]: d for d in map(json.loads, f)}
+
+
+# -------------------------------
+# 메인 분석 함수
+# -------------------------------
+def analyze(pred_path, gt_path, output_path="worst_100_preds.jsonl"):
+    print(f"[INFO] Loading predictions from {pred_path}")
+    preds = load_jsonl(pred_path)
+    print(f"[INFO] Loading ground-truths from {gt_path}")
+    gts = load_gt_jsonl(gt_path)
+
+    results = []
+    for p in tqdm(preds, desc="Computing global IoU"):
+        qid = p.get("qid")
+        if qid not in gts:
+            continue
+        gt = gts[qid]
+        gt_windows = gt.get("relevant_windows", [])
+        pred_windows = p.get("pred_relevant_windows", [])
+
+        if not gt_windows or not pred_windows:
+            continue
+
+        i = compute_global_iou(pred_windows, gt_windows)
+
+	# 병합된 pred_windows를 보기 좋게 정리
+        merged_pred = merge_intervals([[float(s), float(e)] for s, e, *_ in pred_windows])
+
+        results.append({
+            "qid": qid,
+            "vid": p.get("vid"),
+            "query": p.get("query"),
+            "gt_windows": gt_windows,
+            "pred_windows": [[s, e] for s, e, *_ in merged_pred],
+            "iou": i
+        })
+
+    # IoU 오름차순 정렬
+    worst = sorted(results, key=lambda x: x["iou"])[:100]
+    Path(output_path).parent.mkdir(parents=True, exist_ok=True)
+    with open(output_path, "w") as f:
+        for r in worst:
+            f.write(json.dumps(r) + "\n")
+
+    print(f"[INFO] Total samples: {len(results)} | Worst 100 saved to {output_path}")
+
+    # IoU 내림차순 정렬 (가장 높은 100개)
+    best = sorted(results, key=lambda x: x["iou"], reverse=True)[:100]
+    best_output_path = Path(output_path).with_name("best_100_preds.jsonl")
+    with open(best_output_path, "w") as f:
+        for r in best:
+            f.write(json.dumps(r) + "\n")
+
+    print(f"[INFO] Best 100 saved to {best_output_path}")
+
+    # 콘솔 예시 출력
+    print("\n===== Worst 5 samples =====")
+    for r in worst[:5]:
+        print(f"[IoU={r['iou']:.3f}] {r['vid']} :: {r['query']}")
+        print(f"  GT:   {r['gt_windows']}")
+        print(f"  Pred: {r['pred_windows']}\n")
+
+    # 히스토그램 저장
+    ious = [r["iou"] for r in results]
+    plt.figure(figsize=(6, 4))
+    plt.hist(ious, bins=20, color="royalblue", edgecolor="black")
+    plt.title("Global IoU Distribution (total intersection / union)")
+    plt.xlabel("IoU")
+    plt.ylabel("Count")
+    plt.tight_layout()
+    output_img = Path(output_path).with_name("iou_hist.png")
+    plt.savefig(output_img)
+    print(f"[INFO] Saved IoU histogram to {output_img}")
+
+
+# -------------------------------
+# 실행부
+# -------------------------------
+if __name__ == "__main__":
+    import argparse
+    parser = argparse.ArgumentParser(description="Analyze Moment-DETR predictions vs GT (global IoU version)")
+    parser.add_argument("--pred_path", type=str, default="inference_hl_val_None_preds.jsonl",
+                        help="Path to inference results (.jsonl)")
+    parser.add_argument("--gt_path", type=str, default="highlight_val_release.jsonl",
+                        help="Path to GT labels (.jsonl)")
+    parser.add_argument("--output_path", type=str, default="worst_100_preds.jsonl",
+                        help="Path to save top-100 lowest IoU samples")
+    args = parser.parse_args()
+
+    analyze(args.pred_path, args.gt_path, args.output_path)

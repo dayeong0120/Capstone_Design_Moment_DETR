@@ -98,8 +98,17 @@ def compute_mr_results(model, eval_loader, opt, epoch_i=None, criterion=None, tb
         query_meta = batch[0]
         model_inputs, targets = prepare_batch_inputs(batch[1], opt.device, non_blocking=opt.pin_memory)
         outputs = model(**model_inputs)
+        """
+        outputs = {
+                "pred_logits": tensor(B, Nq, 2),
+                "pred_spans": tensor(B, Nq, 2)  # (start, end)
+                "saliency_scores": tensor(B, L)
+            }
+        """
+        # 두 클래스는 foreground, background
         prob = F.softmax(outputs["pred_logits"], -1)  # (batch_size, #queries, #classes=2)
-        if opt.span_loss_type == "l1":
+        if opt.span_loss_type == "l1": # span을 “실수값(continuous regression)”으로 직접 예측하는 모델 구조
+            # 각 query의 foreground 확률을 scores로 저장.
             scores = prob[..., 0]  # * (batch_size, #queries)  foreground label is 0, we directly take it
             pred_spans = outputs["pred_spans"]  # (bsz, #queries, 2)
             _saliency_scores = outputs["saliency_scores"].half()  # (bsz, L)
