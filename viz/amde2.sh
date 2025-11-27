@@ -26,7 +26,7 @@ mkdir -p logs
 echo "[INFO] Working directory: $(pwd)"
 
 # ---------- 3️⃣ 출력 폴더 자동 생성 ----------
-OUTPUT_DIR="analysis_fg_bg3"
+OUTPUT_DIR="analysis_fg_bg4"
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
     echo "[INFO] Created output directory: $OUTPUT_DIR"
