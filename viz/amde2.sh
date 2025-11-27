@@ -21,7 +21,7 @@ conda activate momentdetr
 echo "[INFO] Conda environment activated: $CONDA_DEFAULT_ENV"
 
 # ---------- 2️⃣ 경로 설정 ----------
-cd /data/hsg0113/repos/moment_detr/viz
+cd /data/hsg0113/repos/cap_detr/viz
 mkdir -p logs
 echo "[INFO] Working directory: $(pwd)"
 
