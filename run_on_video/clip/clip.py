@@ -121,13 +121,29 @@ def load(name: str, device: Union[str, torch.device] = "cuda" if torch.cuda.is_a
     device_node = [n for n in device_holder.graph.findAllNodes("prim::Constant") if "Device" in repr(n)][-1]
 
     def patch_device(module):
-        graphs = [module.graph] if hasattr(module, "graph") else []
+        graphs = []
+        # ✅ 일부 모듈은 graph 접근 시 forward 없음 → 안전하게 예외 처리
+        if hasattr(module, "graph"):
+            try:
+                graphs.append(module.graph)
+            except RuntimeError:
+                return  # 해당 모듈은 스킵
+
         if hasattr(module, "forward1"):
-            graphs.append(module.forward1.graph)
+            try:
+                graphs.append(module.forward1.graph)
+            except RuntimeError:
+                pass
 
         for graph in graphs:
             for node in graph.findAllNodes("prim::Constant"):
-                if "value" in node.attributeNames() and str(node["value"]).startswith("cuda"):
+                if "value" in node.attributeNames():
+                    try:
+                        val = node.s("value")
+                    except RuntimeError:
+                        continue
+                    if str(val).startswith("cuda"):
+                        node.s_("value", str(device))
                     node.copyAttributes(device_node)
 
     model.apply(patch_device)

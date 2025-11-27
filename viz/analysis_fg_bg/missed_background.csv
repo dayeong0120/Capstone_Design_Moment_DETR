@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+9554,kE-LxJdtTT0_60.0_210.0,Rapist being sentenced in court,0.0,14.0,0.0,1.0,bg,bg_missed_hit
+3354,HL60CCu_R44_60.0_210.0,A man next to a small red car talking to the camera.,16.0,84.0,0.0,1.0,bg,bg_missed_hit
+2441,xQ5SY0ZDXZs_360.0_510.0,Drivers view of a motorcycle is in motion.,0.0,22.0,0.0,1.0,bg,bg_missed_hit
+9934,z96UT5W0sfM_60.0_210.0,People in white are walking down the street.,86.0,100.0,0.0,1.0,bg,bg_missed_hit
+3007,DHHHHFojz3E_60.0_210.0,The people give a tour of their hotel room.,116.0,126.0,0.0001,1.0,bg,bg_missed_hit
+1596,ruYn5dOkIyI_360.0_510.0,Two girls walk across a balance beam repeatedly.,142.0,150.0,0.0001,1.0,bg,bg_missed_hit
+2166,3fESWnyZC0o_360.0_510.0,"Two girls having ravoli, lasagne, salad and a drink for their lunch",52.0,82.0,0.0003,1.0,bg,bg_missed_hit
+7745,UGafHWHJrLg_60.0_210.0,A girl is excited about showing her bed with a big red heart in it.,0.0,10.0,0.0003,1.0,bg,bg_missed_hit
+10106,M2LGcH3S_ok_60.0_210.0,Woman sits behind a desk that has a laptop with the show name on it.,100.0,110.0,0.0004,1.0,bg,bg_missed_hit
+4485,M2MuFhHSfIU_210.0_360.0,Man in red sweatshirt vlogs from a locker room.,2.0,8.0,0.0006,1.0,bg,bg_missed_hit
+8348,Piw-9dOC8YQ_510.0_660.0,An passionate art teacher narrates a video of herself teaching her afternoon art class,76.0,150.0,0.0043,1.0,bg,bg_missed_hit
+2226,_KxhUp5EzZ8_360.0_510.0,My travel bag packing during Covid19,92.0,100.0,0.0078,1.0,bg,bg_missed_hit
+6411,FXULtwAVFqQ_210.0_360.0,The young woman shows the cover of the book she's reading and the view from the poolside.,40.0,62.0,0.0124,1.0,bg,bg_missed_hit
+9768,W9px1LFMICg_60.0_210.0,"A man in orange, black and white t-shirt is talking in front of the camera while moving his arms",0.0,150.0,0.0139,1.0,bg,bg_missed_hit
+9369,kgwvIEF1A9E_60.0_210.0,People are protesting in Armenia against government,28.0,38.0,0.0352,1.0,bg,bg_missed_hit
+8470,uE1ciE0PCIU_660.0_810.0,Boy is holding a ice cream cone.,0.0,16.0,0.0857,1.0,bg,bg_missed_hit
+1365,pmGyw055pQg_210.0_360.0,Indian Girl sharing some beautiful flowers and plants clips,0.0,150.0,0.0883,1.0,bg,bg_missed_hit
+4689,FlIZP8D0_gQ_360.0_510.0,Tourist girl filming elegant hotel room,0.0,150.0,0.1094,1.0,bg,bg_missed_hit
+1827,XWLHTkh1fAI_60.0_210.0,A black and white video showing two close friends near each other.,56.0,94.0,0.1154,1.0,bg,bg_missed_hit
+2585,Jz1Cszaqck0_360.0_510.0,A dog circling in a lawn,146.0,150.0,0.1367,1.0,bg,bg_missed_hit
+6511,RH9FHjHgiJI_60.0_210.0,A woman is walking through the streets of a busy city while carrying her baby in her shoulder.,12.0,18.0,0.1515,1.0,bg,bg_missed_hit
+4181,2D67JzF1Vpk_60.0_210.0,Man stands in front of a wall with butterflies on the wall.,0.0,10.0,0.1955,1.0,bg,bg_missed_hit
+5239,GOzEeIvLZO4_60.0_210.0,A woman talks to the camera whilst riding on a coach.,0.0,138.0,0.0209,0.9710144927536232,bg,bg_missed_hit
+2977,S1DZb9SkrK8_360.0_510.0,African American pop star sharing some movements,0.0,144.0,0.0254,0.96,bg,bg_missed_hit
+9358,yjzmMAmgNFA_210.0_360.0,A journalist covers the storm damage to the newsroom itself,62.0,102.0,0.0114,0.95,bg,bg_missed_hit
+3608,0_eIFN2FDoU_210.0_360.0,Girl commenting on other v loggers,8.0,150.0,0.0132,0.9466666666666667,bg,bg_missed_hit
+2518,t83PFfp4TFA_360.0_510.0,People getting in mall in South India,62.0,128.0,0.0001,0.9428571428571428,bg,bg_missed_hit
+1797,oQeSC0A1wuc_60.0_210.0,Young man narrates maskless while a woman next to him drives wearing mask.,4.0,70.0,0.008,0.9428571428571428,bg,bg_missed_hit
+6546,v9bV5ERmcCk_210.0_360.0,A man in black t-shirt is talking in front of the camera while drinking hot chocolate,80.0,150.0,0.096,0.9428571428571428,bg,bg_missed_hit
+6518,S4z8QOxZisc_360.0_510.0,A woman is sitting in front of a window wearing a very bright orange robe.,64.0,96.0,0.0,0.9411764705882353,bg,bg_missed_hit
+5958,xUb7T-C0Yt4_210.0_360.0,"A brownish, silt filled river cuts through a landscape covered in trees.",0.0,30.0,0.0104,0.9375,bg,bg_missed_hit
+4419,wUgPzvcKK5c_360.0_510.0,Man in black top sits on a twin bed.,36.0,148.0,0.0002,0.9333333333333333,bg,bg_missed_hit
+3407,YIUaJzjNPuo_60.0_210.0,A girl doing a hotel room tour,6.0,136.0,0.0,0.9285714285714286,bg,bg_missed_hit
+3370,869XmJMiEys_210.0_360.0,Two people check out a bakery and eat some of the treats there.,100.0,126.0,0.2893,0.9285714285714286,bg,bg_missed_hit
+6413,VKKH07K1zbI_210.0_360.0,A man wearing a hat and young woman in a black and white dress sit by a table outside and talk.,26.0,150.0,0.0084,0.9253731343283582,bg,bg_missed_hit
+8101,T9ptpjvuIP8_360.0_510.0,Man in blue top talks to a woman behind him.,0.0,26.0,0.0,0.9230769230769231,bg,bg_missed_hit
+5584,cJ8kzdeoevg_360.0_510.0,Two people look at an art installation of a boy riding a motorcycle.,112.0,136.0,0.0,0.9166666666666666,bg,bg_missed_hit
+4303,KSfxcXTfXDg_60.0_210.0,A couple is walking through a zoo exhibit containing different exotic birds.,126.0,148.0,0.0,0.9166666666666666,bg,bg_missed_hit
+7055,9Xzrtwiint4_510.0_660.0,A woman takes a look inside of the fridge,58.0,82.0,0.0,0.9166666666666666,bg,bg_missed_hit
+1692,L_RuElxOqKI_360.0_510.0,Adorable dog and cat having photo session with asian girl,0.0,24.0,0.003,0.9166666666666666,bg,bg_missed_hit
+1790,m8tif6c-u8w_360.0_510.0,Blonde teenage girl has the lights off when she vlogs alone.,84.0,146.0,0.155,0.9117647058823529,bg,bg_missed_hit
+2506,-l-ZfQfRs3I_60.0_210.0,Woman rides in the car with headwrap and scarf.,74.0,96.0,0.0,0.9090909090909091,bg,bg_missed_hit
+580,7PKEbzSNwts_60.0_210.0,Blonde woman talks with the shoe rack to the left.,50.0,72.0,0.0009,0.9090909090909091,bg,bg_missed_hit
+5902,eE1m539s9RE_210.0_360.0,A girl is sharing her air travel experience during pandemic,8.0,144.0,0.0014,0.9066666666666666,bg,bg_missed_hit
+1223,kPXnelu5wZk_210.0_360.0,The woman is chatting while wearing a yellow sweater.,86.0,150.0,0.1506,0.90625,bg,bg_missed_hit
+6643,kY4Jm68gg38_60.0_210.0,A woman with brown hair is eating a croissant in a cafe.,44.0,86.0,0.0009,0.9047619047619048,bg,bg_missed_hit
+9209,DrLO4lnx6l0_60.0_210.0,Flooding after massive rainfall in Hyderabad India,88.0,148.0,0.007,0.9032258064516129,bg,bg_missed_hit
+9209,DrLO4lnx6l0_60.0_210.0,Flooding after massive rainfall in Hyderabad India,0.0,40.0,0.0,0.9,bg,bg_missed_hit
+2342,3UPP_WRL86c_360.0_510.0,Striped shirt woman sits in a desk in her bedroom.,68.0,86.0,0.0,0.9,bg,bg_missed_hit
+2148,czN-9IsQXoU_60.0_210.0,A woman and a child enjoy a train ride in an amusement park.,32.0,72.0,0.0,0.9,bg,bg_missed_hit
