@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+6995,71Fa81Wr-dE_660.0_810.0,A woman is holding up a tray full of sections of tiny herbs.,98.0,120.0,1.0,0.0,fg,fg_confident_wrong
+3915,izeyQalOwGg_60.0_210.0,Man in white top sits in a a van backseat.,70.0,94.0,0.9999,0.0,fg,fg_confident_wrong
+3026,nrIoV2MDhN0_210.0_360.0,A person wearing a white mask and read hood walking along a street and through a mall.,106.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+8287,MNmYbLZ9Z_U_510.0_660.0,The worker lifts the crate further into the truck.,96.0,136.0,0.9999,0.0,fg,fg_confident_wrong
+4203,ZxHh_2YdmT4_360.0_510.0,The vlogger shows a beach with no people.,0.0,56.0,0.9999,0.0,fg,fg_confident_wrong
+6192,m0cZFcXa5sc_60.0_210.0,A woman in black t-shirt is applying the cream on her face,18.0,44.0,0.9999,0.0,fg,fg_confident_wrong
+3698,EjV6yAxwyyI_360.0_510.0,A woman typing on a laptop beside a jar of coffee with a straw in it.,36.0,62.0,0.9999,0.0,fg,fg_confident_wrong
+4303,KSfxcXTfXDg_60.0_210.0,A couple is walking through a zoo exhibit containing different exotic birds.,42.0,74.0,0.9998,0.0,fg,fg_confident_wrong
+456,CkWOpyrAXdw_60.0_210.0,Chef puts food into tupperware.,0.0,38.0,0.9998,0.0,fg,fg_confident_wrong
+3513,K3lDAtwYt_4_210.0_360.0,Couple boarding on ferry and sharing romantic scene of the evening,0.0,46.0,0.9997,0.0,fg,fg_confident_wrong
+5667,BanSEQnGfFg_210.0_360.0,Woman waits for ride at the airport then gets in.,0.0,26.0,0.9997,0.0,fg,fg_confident_wrong
+8356,FYU3KWg9TdQ_510.0_660.0,A woman talks while behind the wheel of her stationary car quite excitedly with rapid hand gestures.,0.0,64.0,0.9997,0.0,fg,fg_confident_wrong
+7745,UGafHWHJrLg_60.0_210.0,A girl is excited about showing her bed with a big red heart in it.,62.0,100.0,0.9997,0.0,fg,fg_confident_wrong
+2264,Z8MR9i08l6g_360.0_510.0,Woman in hoodie holds the camera like she's taking a selfie.,14.0,40.0,0.9996,0.0,fg,fg_confident_wrong
+1532,a2KIsaS9iJg_60.0_210.0,A couple cleaning their motor bike with water,92.0,122.0,0.9996,0.0,fg,fg_confident_wrong
+5671,hWr2e0vQaLA_210.0_360.0,Man with backpacks walks down a dirt road.,98.0,122.0,0.9996,0.0,fg,fg_confident_wrong
+7654,WINZiMUH7Lk_210.0_360.0,A little girl in yellow encourages her followers to follow and subscribe to her YouTube channel.,106.0,150.0,0.9996,0.0,fg,fg_confident_wrong
+342,A_MFAuOwK5k_360.0_510.0,Man turns the machine to make spaghetti.,60.0,120.0,0.9994,0.0,fg,fg_confident_wrong
+8187,xtaVwcSitCo_360.0_510.0,Rams and moose are on the side of the road.,110.0,126.0,0.9994,0.0,fg,fg_confident_wrong
+1487,t83PFfp4TFA_60.0_210.0,A girl displaying here decorated hands,24.0,76.0,0.9994,0.0,fg,fg_confident_wrong
+580,7PKEbzSNwts_60.0_210.0,Blonde woman talks with the shoe rack to the left.,130.0,150.0,0.9994,0.0,fg,fg_confident_wrong
+9849,QN-ft-c0WZQ_360.0_510.0,A press conference is being held at the office of the Rockland County with a grey haired man speaking.,52.0,150.0,0.9994,0.0,fg,fg_confident_wrong
+4630,kY4Jm68gg38_210.0_360.0,A woman is biting and tasting different macarons and showing the insides of them.,126.0,150.0,0.9993,0.0,fg,fg_confident_wrong
+6980,oQeSC0A1wuc_510.0_660.0,The passenger in a car lowers his facemask to his chin before putting it back up.,92.0,150.0,0.9993,0.0,fg,fg_confident_wrong
+4985,eBFyZ-JI_1s_60.0_210.0,A man is describing the gym onboard the cruise ship he is on,106.0,150.0,0.9993,0.0,fg,fg_confident_wrong
+7627,h_73QmnwHaQ_360.0_510.0,People put on harnesses and safety gear.,134.0,150.0,0.9992,0.0,fg,fg_confident_wrong
+5275,PWdPLZvdO_I_210.0_360.0,A team wearing matching black wetsuits are standing in a row together.,0.0,14.0,0.9992,0.0,fg,fg_confident_wrong
+9760,pA6Z-qYhSNg_60.0_210.0,"Different types of meat products are being cut, shaped and prepared.",10.0,32.0,0.9991,0.0,fg,fg_confident_wrong
+561,ObBiYbyai0Y_210.0_360.0,A soccer play is giving a press conference in front of jeep and adidas logos.,8.0,28.0,0.9991,0.0,fg,fg_confident_wrong
+6875,gHFQWFXfRgQ_210.0_360.0,A woman is folding a sheet made of green fabric.,14.0,42.0,0.9991,0.0,fg,fg_confident_wrong
+5304,UdiR9BWQKew_360.0_510.0,A woman showing a new shelf for coats and shoes,50.0,66.0,0.9991,0.0,fg,fg_confident_wrong
+7451,VUV77-5ERxA_510.0_660.0,People walk in a single file line into a building.,0.0,64.0,0.9991,0.0,fg,fg_confident_wrong
+9899,DTInxNfWXVc_210.0_360.0,Man with headphones having a video interview,44.0,150.0,0.999,0.0,fg,fg_confident_wrong
+4474,2X46BBkcCeY_60.0_210.0,Man and woman stand in front of a circular siver sculpture.,0.0,46.0,0.999,0.0,fg,fg_confident_wrong
+7389,idvZpkYWOMQ_660.0_810.0,A man is sitting an an angle towards the screen and watching his friend play a video game.,16.0,42.0,0.999,0.0,fg,fg_confident_wrong
+7846,xb-GHGr3s6k_60.0_210.0,Woman flexes her muscles for photos.,8.0,26.0,0.9989,0.0,fg,fg_confident_wrong
+4080,BVRBR8LSk9w_60.0_210.0,Brunette woman walks through a lobby with a woman with a hood.,12.0,44.0,0.9989,0.0,fg,fg_confident_wrong
+683,_KxhUp5EzZ8_210.0_360.0,Woman picks up makeup from the floor.,96.0,116.0,0.9989,0.0,fg,fg_confident_wrong
+6002,XjkiAOp0BMY_360.0_510.0,A woman in white hoodie is talking about her shoes in front of the camera,0.0,74.0,0.9989,0.0,fg,fg_confident_wrong
+8312,-_s0sXOfS3w_510.0_660.0,A guy with grey top is showing a box filled with rubbish.,110.0,150.0,0.9988,0.0,fg,fg_confident_wrong
+9284,J4pIK7YehhQ_60.0_210.0,A fireman is standing on site reporting the situation on the ground near a firetruck on a road.,2.0,26.0,0.9988,0.0,fg,fg_confident_wrong
+2160,2X46BBkcCeY_360.0_510.0,A couple chilling on a beach sand,2.0,26.0,0.9988,0.0,fg,fg_confident_wrong
+6241,UdiR9BWQKew_60.0_210.0,Woman wears a mask around her chin in the car.,0.0,52.0,0.9987,0.0,fg,fg_confident_wrong
+2320,0rES0DQHGis_210.0_360.0,Two girls travelling in a shuttle to reach a airport,130.0,150.0,0.9987,0.0,fg,fg_confident_wrong
+3678,hpcc5pGNKZk_210.0_360.0,man in the cap he talking about thanks giving day and Christmas.,0.0,88.0,0.9986,0.0,fg,fg_confident_wrong
+8173,DU3E7tTt0_s_60.0_210.0,Friends hug each other on the bed.,16.0,34.0,0.9986,0.0,fg,fg_confident_wrong
+689,L8IkH3DPsVo_360.0_510.0,Woman wearing Yankees hat lies on a towel on the beach.,10.0,42.0,0.9986,0.0,fg,fg_confident_wrong
+4505,Ifgq2XU0G_s_210.0_360.0,View of the crowd walking down below.,102.0,116.0,0.9986,0.0,fg,fg_confident_wrong
+7555,IdpHJK90VDw_660.0_810.0,Man in a black suit escorts a woman to a doorway.,114.0,150.0,0.9985,0.0,fg,fg_confident_wrong
+1616,XzxRMH7G8Lk_210.0_360.0,A man holding a little snake on his hand,96.0,122.0,0.9985,0.0,fg,fg_confident_wrong

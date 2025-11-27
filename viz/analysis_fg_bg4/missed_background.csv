@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+2587,Z4hMlOIhjJ4_60.0_210.0,A couple talking on a couch from their office,44.0,68.0,0.0,1.0,bg,bg_missed_hit
+9479,7QNJyAIprhg_210.0_360.0,Lots of emergency vehicles are parked with lights blazing.,142.0,150.0,0.0,1.0,bg,bg_missed_hit
+251,ObBiYbyai0Y_360.0_510.0,Man is giving a press conference in between corporate logos.,140.0,150.0,0.0001,1.0,bg,bg_missed_hit
+7850,OiueSrtEfvs_360.0_510.0,Vlogger gets a fruit chopped up and drinks from it.,72.0,86.0,0.0001,1.0,bg,bg_missed_hit
+7826,bowYAwxuG-c_210.0_360.0,A woman is having snacks and hanging out near a Christmas tree with a city view of skyscrapers behind her at night.,50.0,82.0,0.0001,1.0,bg,bg_missed_hit
+5748,_9vleIcuQd0_210.0_360.0,"Blonde woman holds the camera up to the mirror while talking,",140.0,148.0,0.0003,1.0,bg,bg_missed_hit
+7666,smUAWKLhWnA_60.0_210.0,Man in blue helmet rides on motorcycle.,8.0,18.0,0.0003,1.0,bg,bg_missed_hit
+9485,7QNJyAIprhg_360.0_510.0,Police officer trying to control BLM protestors,144.0,150.0,0.0004,1.0,bg,bg_missed_hit
+623,FbUT42sj_os_360.0_510.0,A seating area is located outside and is made up of circular stools and tables.,0.0,14.0,0.0027,1.0,bg,bg_missed_hit
+9636,eRqYUTA5JJo_360.0_510.0,A woman with a large blue microphone talks for the radio whilst making hand gestures.,144.0,150.0,0.0044,1.0,bg,bg_missed_hit
+4571,Kuq50cVSFbw_60.0_210.0,Man holds up different camera parts.,88.0,94.0,0.0095,1.0,bg,bg_missed_hit
+6046,CXTWqVz5rhY_360.0_510.0,Horse's head seen walking down the trail.,84.0,88.0,0.0152,1.0,bg,bg_missed_hit
+9485,7QNJyAIprhg_360.0_510.0,Police officer trying to control BLM protestors,0.0,8.0,0.0267,1.0,bg,bg_missed_hit
+5730,xVJMPmmW7rE_360.0_510.0,Man points to signs on the trail.,92.0,106.0,0.0431,1.0,bg,bg_missed_hit
+8824,eeeYIo6nxcA_510.0_660.0,A couple are talking and showing the food and drink they had in the restaurant.,146.0,150.0,0.0837,1.0,bg,bg_missed_hit
+10220,yDu6jiOdj80_360.0_510.0,Drone shots of a vast desert.,120.0,126.0,0.0877,1.0,bg,bg_missed_hit
+3770,LhzuoCF1ieo_360.0_510.0,Three people are sitting in a talk show.,146.0,150.0,0.285,1.0,bg,bg_missed_hit
+10240,8_RYMkPdpE8_60.0_210.0,Mike Pence speaks in front of a blue background with words on it.,0.0,2.0,0.443,1.0,bg,bg_missed_hit
+1940,FlIZP8D0_gQ_60.0_210.0,A woman looks at a sumptous breakfast buffet at a resort,70.0,132.0,0.4562,1.0,bg,bg_missed_hit
+1596,ruYn5dOkIyI_360.0_510.0,Two girls walk across a balance beam repeatedly.,40.0,64.0,0.4815,1.0,bg,bg_missed_hit
+9768,W9px1LFMICg_60.0_210.0,"A man in orange, black and white t-shirt is talking in front of the camera while moving his arms",0.0,148.0,0.009,0.9866666666666667,bg,bg_missed_hit
+9528,W9px1LFMICg_210.0_360.0,Man with orange top points to things on a white board.,2.0,150.0,0.0167,0.9866666666666667,bg,bg_missed_hit
+10273,-oPEG4FKHy8_60.0_210.0,A soldier in uniform is talking in wood building.,2.0,150.0,0.1105,0.9866666666666667,bg,bg_missed_hit
+7515,abRmll8VM9k_510.0_660.0,Woman talks to camera leaning forward on the counter.,62.0,150.0,0.0792,0.9772727272727273,bg,bg_missed_hit
+6380,EriqfBlZe5Y_360.0_510.0,A man in black t-shirt and wearing a hat is talking in front of many people then change to a man in black t-shirt talking to the people afterwards change to a man in white t-shirt and wearing a hat talking in front of people,4.0,150.0,0.1009,0.9733333333333334,bg,bg_missed_hit
+8341,PS5rtWdxn3A_510.0_660.0,A group of girls are playing a searching game while camping in the wild.,6.0,128.0,0.0016,0.953125,bg,bg_missed_hit
+3747,eeeYIo6nxcA_360.0_510.0,Tourist couple giving reviews on food and rides,2.0,144.0,0.0139,0.9466666666666667,bg,bg_missed_hit
+3503,nY42UppPhhg_360.0_510.0,A man talking from a beach,52.0,86.0,0.0116,0.9444444444444444,bg,bg_missed_hit
+6538,yITWrNLEGLE_60.0_210.0,A woman in black hijab lying on the bed and summarize her trip.,118.0,150.0,0.0567,0.9411764705882353,bg,bg_missed_hit
+2342,3UPP_WRL86c_360.0_510.0,Striped shirt woman sits in a desk in her bedroom.,0.0,68.0,0.4701,0.9411764705882353,bg,bg_missed_hit
+1389,WINZiMUH7Lk_360.0_510.0,A mother and daughter sit next to each other surrounded by lights.,120.0,150.0,0.0049,0.9375,bg,bg_missed_hit
+5532,HpO-sV7TSSk_360.0_510.0,A couple is sharing their travel highlights,58.0,146.0,0.082,0.9347826086956522,bg,bg_missed_hit
+10309,4G9S-eoLgX4_60.0_210.0,Google maps of the desert is shown with red circles.,74.0,102.0,0.0,0.9333333333333333,bg,bg_missed_hit
+9917,rZQjpKRsPMQ_360.0_510.0,A man and woman walk through a forest clearly near a logging site.,120.0,150.0,0.2178,0.9333333333333333,bg,bg_missed_hit
+3411,WtAOsyldvJk_210.0_360.0,A girl doing a hotel room doors,2.0,130.0,0.0006,0.927536231884058,bg,bg_missed_hit
+9651,atDm_Gamcqo_210.0_360.0,A video showing people in the desert,0.0,138.0,0.1158,0.927536231884058,bg,bg_missed_hit
+2429,Y2GVVC_cD_E_360.0_510.0,White man giving interview  at beautiful location,2.0,136.0,0.0018,0.9264705882352942,bg,bg_missed_hit
+7066,3Bk5MJEo2EA_510.0_660.0,Vlogger walks past the desert counter.,50.0,74.0,0.0001,0.9230769230769231,bg,bg_missed_hit
+210,cLvULsyPH4E_60.0_210.0,Mother does her daughter's hair and makeup.,60.0,86.0,0.0002,0.9230769230769231,bg,bg_missed_hit
+8396,xQ5SY0ZDXZs_510.0_660.0,A man is driving fast on the motorway on the bike.,94.0,146.0,0.0087,0.9230769230769231,bg,bg_missed_hit
+4792,8yHwJ3f7Fi4_60.0_210.0,A young Asian couple sharing wired earplug headphones,56.0,82.0,0.4562,0.9230769230769231,bg,bg_missed_hit
+2518,t83PFfp4TFA_360.0_510.0,People getting in mall in South India,56.0,132.0,0.3374,0.9210526315789473,bg,bg_missed_hit
+3525,YIUaJzjNPuo_210.0_360.0,A girl doing a selfie video in her night dress,58.0,80.0,0.0003,0.9166666666666666,bg,bg_missed_hit
+9985,4G9S-eoLgX4_360.0_510.0,Soldiers are escorting people walking down a dirt road.,128.0,150.0,0.1567,0.9166666666666666,bg,bg_missed_hit
+3857,9Xzrtwiint4_60.0_210.0,Asian girl girl vlogs in front of her bed.,0.0,64.0,0.1418,0.9142857142857143,bg,bg_missed_hit
+8813,6gmGISTKDPw_510.0_660.0,A female driver speaks as her vehicle is in motion.,0.0,106.0,0.0137,0.9137931034482759,bg,bg_missed_hit
+9634,W9px1LFMICg_360.0_510.0,Man talks to camera and writes on the white board.,12.0,148.0,0.0445,0.9066666666666666,bg,bg_missed_hit
+10117,NzyjaMWxNrU_360.0_510.0,MAn with black overcoat stands in front of a tower at night.,12.0,110.0,0.0006,0.9056603773584906,bg,bg_missed_hit
+7830,X3B-d-QsWXY_60.0_210.0,The driver of a rickshaw is explaining something about the location to a rider.,66.0,108.0,0.0003,0.9047619047619048,bg,bg_missed_hit
+7234,xQ5SY0ZDXZs_660.0_810.0,Dash cam view of  motorcycle parked at a crosswalk.,110.0,148.0,0.0076,0.9047619047619048,bg,bg_missed_hit
