@@ -55,7 +55,7 @@ ckpt/
 *.pth
 *.pt
 *.ckpt
-*.bin
+*.bin 
 
 # Data & annotations
 data/
