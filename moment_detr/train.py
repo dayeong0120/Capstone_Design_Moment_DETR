@@ -196,6 +196,16 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                 "query_norms": query_norms
             }) + "\n")
 
+            # 6) Query별 예측구간의 중심값, 길이 평균
+            f.write(json.dumps({
+                "type": "query_span_stats",
+                "epoch": epoch_i,
+                "mean_cx":  [float(np.mean(L)) for L in LOG.QUERY_SPAN_CX],
+                "std_cx":   [float(np.std(L))  for L in LOG.QUERY_SPAN_CX],
+                "mean_w":   [float(np.mean(L)) for L in LOG.QUERY_SPAN_LEN],
+                "std_w":    [float(np.std(L))  for L in LOG.QUERY_SPAN_LEN],
+            }) + "\n")
+
         # next epoch 위해 버퍼 비우기
         LOG.IOU_MISMATCH_BUFFER.clear()
 

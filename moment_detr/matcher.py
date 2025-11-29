@@ -111,6 +111,27 @@ class HungarianMatcher(nn.Module):
             for q in range(num_queries):
                 LOG.QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
         # ------------------------------------------
+        # ------------------------------------------
+        # [추가] Query별 예측 구간의 중심값 및 길이 기록
+        pred_spans = outputs["pred_spans"]  # (bs, num_queries, 2)
+        span_centers  = pred_spans[..., 0]        # (bs, num_queries)
+        span_lengths = pred_spans[..., 1]   # (bs, num_queries)
+
+        # 전역 버퍼 초기화
+        if LOG.QUERY_SPAN_CX is None:
+            LOG.QUERY_SPAN_CX = [[] for _ in range(num_queries)]
+
+        if LOG.QUERY_SPAN_LEN is None:
+            LOG.QUERY_SPAN_LEN = [[] for _ in range(num_queries)]
+        
+        # 배치별로 기록
+        for b in range(bs):
+            for q in range(num_queries):
+                cx = float(span_centers[b, q])
+                length = float(span_lengths[b, q])
+                LOG.QUERY_SPAN_CX[q].append(cx)
+                LOG.QUERY_SPAN_LEN[q].append(length)
+
 
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
         tgt_spans = torch.cat([v["spans"] for v in targets])  # [num_target_spans in batch, 2]
@@ -239,7 +260,6 @@ class HungarianMatcher(nn.Module):
 
         # ------------------------------------------
         # [추가] IoU 높지만 매칭되지 않은 query 기록
-        # ------------------------------------------
         IOU_THRESH = 0.5
 
         iou_mismatch_list = []  # 이번 매칭 결과에서 발견된 mismatch를 저장할 리스트
@@ -298,6 +318,7 @@ class HungarianMatcher(nn.Module):
         for entry in iou_mismatch_list:
             q = entry["query"]
             LOG.QUERY_MISMATCH_COUNT[q] += 1
+        # ------------------------------------------
 
         # 이 numpy 배열들을 torch 텐서로 감싸서 반환
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]

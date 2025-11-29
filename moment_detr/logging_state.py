@@ -6,3 +6,5 @@ is_training_phase = False  # 훈련 단계 여부
 IOU_MISMATCH_BUFFER = []   # IoU 높은데 매칭 실패한 케이스 임시 저장
 QUERY_MISMATCH_COUNT = None    # 쿼리별 mismatch 횟수 저장용
 QUERY_FG_SCORES = None
+QUERY_SPAN_LEN=None
+QUERY_SPAN_CX = None
