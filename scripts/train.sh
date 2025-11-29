@@ -29,13 +29,13 @@ fi
 # clip video
 if [[ ${v_feat_types} == *"clip"* ]]; then
   # IMPORTANT: use clip-vit_features (actual folder name)
-  v_feat_dirs+=(${feat_root}/clip-vit_features)
+  v_feat_dirs+=(${feat_root}/clip_features)
   (( v_feat_dim += 512 ))
 fi
 
 # ---------------- TEXT FEATURES ---------------- #
 if [[ ${t_feat_type} == "clip" ]]; then
-  t_feat_dir=${feat_root}/text_features
+  t_feat_dir=${feat_root}/clip_text_features
   t_feat_dim=512
 else
   echo "[ERROR] Wrong arg for t_feat_type: ${t_feat_type}"
