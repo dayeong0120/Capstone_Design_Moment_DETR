@@ -111,7 +111,6 @@ class HungarianMatcher(nn.Module):
             for q in range(num_queries):
                 LOG.QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
         # ------------------------------------------
-        # ------------------------------------------
         # [추가] Query별 예측 구간의 중심값 및 길이 기록
         pred_spans = outputs["pred_spans"]  # (bs, num_queries, 2)
         span_centers  = pred_spans[..., 0]        # (bs, num_queries)
@@ -131,7 +130,7 @@ class HungarianMatcher(nn.Module):
                 length = float(span_lengths[b, q])
                 LOG.QUERY_SPAN_CX[q].append(cx)
                 LOG.QUERY_SPAN_LEN[q].append(length)
-
+        # ------------------------------------------
 
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
         tgt_spans = torch.cat([v["spans"] for v in targets])  # [num_target_spans in batch, 2]
@@ -278,33 +277,48 @@ class HungarianMatcher(nn.Module):
 
         # 각 배치마다 반복
         for b, (pred_idx, tgt_idx) in enumerate(indices):
-            # pred_idx: 이번 영상에서 매칭된 query index 리스트
-            matched = set(pred_idx.tolist())
+
+            # GT gi → matched query q_matched 매핑
+            matched_query_for_gt = {
+                gi.item(): q.item() for q, gi in zip(pred_idx, tgt_idx)
+            }
+
             # 이번 배치의 GT 개수
             num_gt = len(targets[b]["spans"])
 
             # 모든 query에 대해 검사
             for q in range(num_queries):
                 # 이미 매칭된 query는 mismatch 후보 아님 → skip
-                if q in matched:
+                if q in matched_query_for_gt.values():
                     continue
 
                 # 매칭되지 않은 query가 어떤 GT와 IoU가 높은지 확인
                 for gi in range(num_gt):
+                    if gi not in matched_query_for_gt:
+                        continue
+
+                    q_matched = matched_query_for_gt[gi]
+
                      # IoU 값 가져오기
-                    iou = float(giou_mat[b, q, gi])
+                    iou_q = float(giou_mat[b, q, gi])
+                    iou_matched  = float(giou_mat[b, q_matched, gi])
+
                     # IoU가 threshold 이상인데 매칭 실패 → 문제 케이스
-                    if iou >= IOU_THRESH:
+                    if iou_q >= iou_matched:
                         # 상세 cost breakdown 포함해서 기록
                         iou_mismatch_list.append({
                             "batch": b, # 배치 index
                             "query": q, # 매칭 실패한 query index
                             "gt": gi, # IoU가 높은 GT index
-                            "iou": iou, # IoU 값
-                            "class_cost": float(cost_class_b[b, q, gi]),
-                            "l1_cost": float(cost_span_b[b, q, gi]),
-                            "giou_cost": float(cost_giou_b[b, q, gi]),
-                            "final_cost": float(C_b[b, q, gi]), # IoU 값
+                            "iou_q": iou_q, # IoU 값
+                            "class_cost_q":       float(cost_class_b[b, q, gi]),
+                            "class_cost_matched": float(cost_class_b[b, q_matched, gi]),
+                            "l1_cost_q":          float(cost_span_b[b, q, gi]),
+                            "l1_cost_matched":    float(cost_span_b[b, q_matched, gi]),
+                            "giou_cost_q":        float(cost_giou_b[b, q, gi]),
+                            "giou_cost_matched":  float(cost_giou_b[b, q_matched, gi]),
+                            "final_cost_q":       float(C_b[b, q, gi]),
+                            "final_cost_matched": float(C_b[b, q_matched, gi]),
                         })
 
         # Option 1: 전역 리스트에 저장 (추천)
