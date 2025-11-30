@@ -165,14 +165,14 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                     "count": LOG.QUERY_MISMATCH_COUNT
                 }) + "\n")
 
-            # 3) IoU Mismatch Detailed Logs
-            for entry in LOG.IOU_MISMATCH_BUFFER:
-                rec = {
-                    "type": "iou_mismatch",
-                    "epoch": epoch_i,
-                    **entry
-                }
-                f.write(json.dumps(rec) + "\n")
+            # # 3) IoU Mismatch Detailed Logs
+            # for entry in LOG.IOU_MISMATCH_BUFFER:
+            #     rec = {
+            #         "type": "iou_mismatch",
+            #         "epoch": epoch_i,
+            #         **entry
+            #     }
+            #     f.write(json.dumps(rec) + "\n")
 
             # 4) Query FG Score 평균
             if LOG.QUERY_FG_SCORES is not None:
