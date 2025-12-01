@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+1389,WINZiMUH7Lk_360.0_510.0,A mother and daughter sit next to each other surrounded by lights.,80.0,100.0,0.0001,1.0,bg,bg_missed_hit
+472,AD0qNZy48_s_210.0_360.0,A woman adds ingredients to a bubbling pot of liquid and covers the pot with a top.,2.0,24.0,0.0001,1.0,bg,bg_missed_hit
+251,ObBiYbyai0Y_360.0_510.0,Man is giving a press conference in between corporate logos.,140.0,150.0,0.0004,1.0,bg,bg_missed_hit
+1135,X326z_D4OyE_360.0_510.0,Musicians are jumping on stage.,90.0,96.0,0.0006,1.0,bg,bg_missed_hit
+10106,M2LGcH3S_ok_60.0_210.0,Woman sits behind a desk that has a laptop with the show name on it.,86.0,94.0,0.0006,1.0,bg,bg_missed_hit
+8287,MNmYbLZ9Z_U_510.0_660.0,The worker lifts the crate further into the truck.,0.0,8.0,0.0012,1.0,bg,bg_missed_hit
+10234,ShVIW46xP7g_60.0_210.0,Employees are wearing safety vests working in a warehouse.,0.0,8.0,0.0012,1.0,bg,bg_missed_hit
+938,UCCqLmaF6n0_210.0_360.0,Woman holds a watermelon with a straw in it.,36.0,40.0,0.0018,1.0,bg,bg_missed_hit
+2244,6Mzo1y19iTU_60.0_210.0,The curly haired woman has a laptop with a YouTube logo on it.,38.0,44.0,0.004,1.0,bg,bg_missed_hit
+8454,ez8kypBrMVE_510.0_660.0,A Japanese woman is singing in a car whilst her dog stands beside her.,136.0,150.0,0.0046,1.0,bg,bg_missed_hit
+7945,ioWAoEVYaP0_360.0_510.0,Man in bright green top eats his dinner.,98.0,102.0,0.0127,1.0,bg,bg_missed_hit
+6412,VYco9EldD0Q_360.0_510.0,The little kids ride around in a toy jeep.,72.0,80.0,0.0953,1.0,bg,bg_missed_hit
+10203,8_RYMkPdpE8_210.0_360.0,Mike Pence is sitting in front of a blue background.,6.0,14.0,0.1609,1.0,bg,bg_missed_hit
+9993,M2LGcH3S_ok_210.0_360.0,Internal documetns being displayed with bullets,40.0,46.0,0.1953,1.0,bg,bg_missed_hit
+6511,RH9FHjHgiJI_60.0_210.0,A woman is walking through the streets of a busy city while carrying her baby in her shoulder.,0.0,6.0,0.3035,1.0,bg,bg_missed_hit
+2226,_KxhUp5EzZ8_360.0_510.0,My travel bag packing during Covid19,92.0,100.0,0.3905,1.0,bg,bg_missed_hit
+1264,KWBfQjuwp4E_60.0_210.0,The woman is sitting on the olive green yoga mat with her dog while speaking about yoga.,0.0,74.0,0.0002,0.972972972972973,bg,bg_missed_hit
+8298,KRHEqswrh9I_510.0_660.0,A woman talks in the mirror wearing a black to with white stars.,78.0,150.0,0.2292,0.972972972972973,bg,bg_missed_hit
+9528,W9px1LFMICg_210.0_360.0,Man with orange top points to things on a white board.,2.0,146.0,0.4923,0.96,bg,bg_missed_hit
+2386,74jtgDnsEBU_360.0_510.0,Shirtless man is wearing a comically large hat by a pool.,58.0,104.0,0.0376,0.9583333333333334,bg,bg_missed_hit
+4023,uoVRb7a58GU_360.0_510.0,People butcher meat from a carcass.,28.0,124.0,0.0006,0.9411764705882353,bg,bg_missed_hit
+4099,eX-EpPDjlUs_360.0_510.0,An Indian woman walking near a park and talking to the camera after a photo shoot.,92.0,146.0,0.0981,0.9310344827586207,bg,bg_missed_hit
+7065,kv3NheAKyb0_510.0_660.0,A couple of children hop in the backseat of a driver's vehicle to join him.,122.0,150.0,0.2734,0.9285714285714286,bg,bg_missed_hit
+6162,T9ptpjvuIP8_360.0_510.0,A couple try to tell the story of their failed cruise but are interrupted by each other and their child,0.0,26.0,0.0014,0.9230769230769231,bg,bg_missed_hit
+3303,VYco9EldD0Q_210.0_360.0,Indian family making film of there tour inside India and sharing some beautiful scenes,30.0,146.0,0.0683,0.9206349206349206,bg,bg_missed_hit
+1309,ocLUzCNodj4_360.0_510.0,A woman stands in her bedroom in front of a mirror and talks.,38.0,84.0,0.419,0.92,bg,bg_missed_hit
+934,wk2CeU_DcBo_60.0_210.0,Man and woman walk through the park sidewalk together.,0.0,22.0,0.3513,0.9166666666666666,bg,bg_missed_hit
+1312,GOzEeIvLZO4_360.0_510.0,"A happy couple takes their happy baby to a tree-lined riverside on a beautify sunny, windy, and cold day",30.0,144.0,0.0055,0.9152542372881356,bg,bg_missed_hit
+2441,xQ5SY0ZDXZs_360.0_510.0,Drivers view of a motorcycle is in motion.,26.0,140.0,0.003,0.9137931034482759,bg,bg_missed_hit
+3252,N7frLe-nQog_60.0_210.0,Women showing some outstanding features of Ferrari,12.0,138.0,0.0095,0.9130434782608695,bg,bg_missed_hit
+8560,WC9KLy8Py-k_660.0_810.0,A guy with stroppy top is walking in the airport terminals.,88.0,110.0,0.0021,0.9090909090909091,bg,bg_missed_hit
+5342,NUsG9BgSes0_360.0_510.0,An Asian woman wearing a Boston t-shirt is in her home talking.,54.0,76.0,0.006,0.9090909090909091,bg,bg_missed_hit
+3411,WtAOsyldvJk_210.0_360.0,A girl doing a hotel room doors,6.0,146.0,0.0168,0.9041095890410958,bg,bg_missed_hit
+3739,Jz1Cszaqck0_60.0_210.0,Man with curly hair speaks directly to camera.,0.0,18.0,0.0015,0.9,bg,bg_missed_hit
+193,Ps1SNAGQTc0_210.0_360.0,Woman holds up a bottle of Ghee.,104.0,124.0,0.0078,0.9,bg,bg_missed_hit
+3378,2iW3ei-5fpE_60.0_210.0,A woman in red T-shirt is talking behind a huge stair case.,16.0,34.0,0.0162,0.9,bg,bg_missed_hit
+5614,FXULtwAVFqQ_360.0_510.0,Woman monologues while lying in bed.,56.0,96.0,0.0273,0.9,bg,bg_missed_hit
+2768,seGgZtmWh9E_60.0_210.0,Family having fun on Christmas day and exchanging gifts,0.0,72.0,0.045,0.9,bg,bg_missed_hit
+68,SyMt-tik9q0_360.0_510.0,Man is holding a duck on the bus.,56.0,76.0,0.3171,0.9,bg,bg_missed_hit
+4672,OiueSrtEfvs_210.0_360.0,Tourist girl having fun and sharing amazing scenes from Indonesia,6.0,140.0,0.0354,0.8933333333333333,bg,bg_missed_hit
+5239,GOzEeIvLZO4_60.0_210.0,A woman talks to the camera whilst riding on a coach.,2.0,148.0,0.0463,0.8918918918918919,bg,bg_missed_hit
+2429,Y2GVVC_cD_E_360.0_510.0,White man giving interview  at beautiful location,10.0,124.0,0.0047,0.890625,bg,bg_missed_hit
+6047,GrxpxImALZo_210.0_360.0,A young woman in a bathrobe listens to headphones and enjoys a cup of coffee on her huge bacony amidst city highrises,0.0,18.0,0.0042,0.8888888888888888,bg,bg_missed_hit
+4295,NcRo-rLqXp4_360.0_510.0,Vlogger shows off the food they ate at various restaurants.,28.0,44.0,0.0312,0.8888888888888888,bg,bg_missed_hit
+8323,iQ0io56PejM_510.0_660.0,A guy with red jacket is getting interviewed,114.0,150.0,0.0885,0.8888888888888888,bg,bg_missed_hit
+1566,h6QKDqomIPk_60.0_210.0,Woman talks in a parked car with her son over her shoulder.,78.0,94.0,0.1116,0.8888888888888888,bg,bg_missed_hit
+8691,hoalP6K54Tk_510.0_660.0,A woman walks into a grocery store and empties her basket of items after.,32.0,48.0,0.191,0.8888888888888888,bg,bg_missed_hit
+4041,A0JmK8Dwv3Q_360.0_510.0,A man in a red tank top is smoking from a bong.,42.0,74.0,0.2722,0.8888888888888888,bg,bg_missed_hit
+8401,hoalP6K54Tk_660.0_810.0,A woman and a man ate a cake that she just baked.,50.0,84.0,0.2996,0.8888888888888888,bg,bg_missed_hit
+9690,N8dPpthy7z4_210.0_360.0,Man in blue suit talks in front of a castle.,44.0,80.0,0.4051,0.8888888888888888,bg,bg_missed_hit

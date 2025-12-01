@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+9035,WEpnzfufxJQ_660.0_810.0,Man points out different areas in a square.,78.0,118.0,0.9999,0.0,fg,fg_confident_wrong
+5468,9kF-Rw5PrDY_210.0_360.0,Names of countries are displayed on a wall.,68.0,94.0,0.9998,0.0,fg,fg_confident_wrong
+9061,xVJMPmmW7rE_510.0_660.0,Man in red top hangs out around a waterfall.,120.0,144.0,0.9998,0.0,fg,fg_confident_wrong
+9489,7QNJyAIprhg_60.0_210.0,Policemen holding arms taking cover behind a truck.,124.0,150.0,0.9998,0.0,fg,fg_confident_wrong
+4314,0rES0DQHGis_60.0_210.0,Two girls getting ready to go to an airport in an early morning,70.0,148.0,0.9998,0.0,fg,fg_confident_wrong
+3307,109g6BhejP0_60.0_210.0,Masked airport worker helps the videographer.,60.0,130.0,0.9997,0.0,fg,fg_confident_wrong
+8401,hoalP6K54Tk_660.0_810.0,A woman and a man ate a cake that she just baked.,122.0,150.0,0.9996,0.0,fg,fg_confident_wrong
+7046,h6sCcWcLU7A_510.0_660.0,Woman gives a speech with a mic.,120.0,150.0,0.9996,0.0,fg,fg_confident_wrong
+7311,gY3GOIn80k8_660.0_810.0,A woman is sitting next to a man speaking about a future trip.,52.0,142.0,0.9996,0.0,fg,fg_confident_wrong
+10137,bX9rzBk4maI_60.0_210.0,Money is left behind on the street.,26.0,42.0,0.9996,0.0,fg,fg_confident_wrong
+3026,nrIoV2MDhN0_210.0_360.0,A person wearing a white mask and read hood walking along a street and through a mall.,102.0,150.0,0.9995,0.0,fg,fg_confident_wrong
+9597,Mi7P9r1R6RA_60.0_210.0,Still photos of a soccer team and it's coach to show the college scandal.,76.0,120.0,0.9995,0.0,fg,fg_confident_wrong
+2739,h6sCcWcLU7A_60.0_210.0,A large group of students are standing around outside.,84.0,122.0,0.9995,0.0,fg,fg_confident_wrong
+5246,WINZiMUH7Lk_210.0_360.0,Young girl monologues with a subscribe button underneath.,108.0,150.0,0.9995,0.0,fg,fg_confident_wrong
+7271,CkWOpyrAXdw_660.0_810.0,A woman is adding flour and stock to a metal pan to make a base for a dish.,60.0,118.0,0.9995,0.0,fg,fg_confident_wrong
+9325,kBxxo04zr98_60.0_210.0,A TV news program reports people were lining up for a park spigot that had water pressure during a drought,0.0,36.0,0.9994,0.0,fg,fg_confident_wrong
+3698,EjV6yAxwyyI_360.0_510.0,A woman typing on a laptop beside a jar of coffee with a straw in it.,34.0,66.0,0.9994,0.0,fg,fg_confident_wrong
+10029,pA6Z-qYhSNg_360.0_510.0,Man wearing sunglasses in interviewed next to a van.,72.0,104.0,0.9993,0.0,fg,fg_confident_wrong
+9284,J4pIK7YehhQ_60.0_210.0,A fireman is standing on site reporting the situation on the ground near a firetruck on a road.,0.0,22.0,0.9993,0.0,fg,fg_confident_wrong
+7745,UGafHWHJrLg_60.0_210.0,A girl is excited about showing her bed with a big red heart in it.,68.0,98.0,0.9993,0.0,fg,fg_confident_wrong
+10053,xivzc8l7O_A_360.0_510.0,Some African people walk together in a large group and attend a ceremony.,0.0,18.0,0.9993,0.0,fg,fg_confident_wrong
+5688,rrTIeJRVGjg_60.0_210.0,Man stands in front of a white building monologuing.,114.0,144.0,0.9992,0.0,fg,fg_confident_wrong
+8657,SyMt-tik9q0_510.0_660.0,A man in a black and white striped shirt moves near a cliff,122.0,148.0,0.9992,0.0,fg,fg_confident_wrong
+5958,xUb7T-C0Yt4_210.0_360.0,"A brownish, silt filled river cuts through a landscape covered in trees.",78.0,140.0,0.9991,0.0,fg,fg_confident_wrong
+6917,AD0qNZy48_s_660.0_810.0,Someone is shopping in the store for garlic bulbs.,36.0,68.0,0.9991,0.0,fg,fg_confident_wrong
+8052,T60_zAvnAsU_60.0_210.0,Overhead view of the buildings of Zagreb.,8.0,40.0,0.999,0.0,fg,fg_confident_wrong
+8679,yJLmek6euTA_660.0_810.0,A man is checking out the large wooden entrance to a wilderness lodge.,114.0,150.0,0.999,0.0,fg,fg_confident_wrong
+2411,a2KIsaS9iJg_360.0_510.0,A young husky is being brushed then is let outside in the yard to play with ball toys.,0.0,30.0,0.999,0.0,fg,fg_confident_wrong
+8750,h6sCcWcLU7A_660.0_810.0,The birthday girl is receiving a lot of warm hugs from her friends,112.0,150.0,0.999,0.0,fg,fg_confident_wrong
+5986,cpkXphR7tVo_60.0_210.0,A young woman shows her kitchen and starts preparing grapefruit water,128.0,150.0,0.999,0.0,fg,fg_confident_wrong
+3260,Z2hmY5JrQmo_60.0_210.0,Tourist family checking out of airt port,4.0,66.0,0.9988,0.0,fg,fg_confident_wrong
+10099,kE-LxJdtTT0_360.0_510.0,Woman is wearing a beige headwrap.,28.0,48.0,0.9987,0.0,fg,fg_confident_wrong
+9770,x1m7B8s1sQ0_210.0_360.0,Three tweets are shown next to each other.,32.0,60.0,0.9987,0.0,fg,fg_confident_wrong
+9899,DTInxNfWXVc_210.0_360.0,Man with headphones having a video interview,66.0,150.0,0.9986,0.0,fg,fg_confident_wrong
+2798,xUeRLu1o0v4_210.0_360.0,A man is cooking in a pot on an open fire.,42.0,74.0,0.9986,0.0,fg,fg_confident_wrong
+6282,H15bUc-1LJo_60.0_210.0,"After a tiring trip, a young mother and her family finally reach their hotel with a nice waterfront night view",0.0,52.0,0.9986,0.0,fg,fg_confident_wrong
+8312,-_s0sXOfS3w_510.0_660.0,A guy with grey top is showing a box filled with rubbish.,118.0,138.0,0.9985,0.0,fg,fg_confident_wrong
+5168,6aFvTqmnrJQ_60.0_210.0,A man in black is speaking to a camera on a moving train.,0.0,38.0,0.9985,0.0,fg,fg_confident_wrong
+8792,AVErftnrqwY_510.0_660.0,a man holding a coffee mug.,0.0,16.0,0.9985,0.0,fg,fg_confident_wrong
+6995,71Fa81Wr-dE_660.0_810.0,A woman is holding up a tray full of sections of tiny herbs.,98.0,118.0,0.9985,0.0,fg,fg_confident_wrong
+1626,gTAvxnQtjXM_210.0_360.0,Man with white t shirt stands in front of a ornate European building.,94.0,124.0,0.9984,0.0,fg,fg_confident_wrong
+8605,2vFzBa_WKNg_660.0_810.0,A lady with white top is talking through the Dior make up she bought.,72.0,148.0,0.9984,0.0,fg,fg_confident_wrong
+3925,FYU3KWg9TdQ_60.0_210.0,A marbled dark cat with white boot patterns is eating out of a dish.,54.0,88.0,0.9984,0.0,fg,fg_confident_wrong
+4969,8s9fLWEi4So_210.0_360.0,Little girl gets super excited for lunch.,62.0,94.0,0.9984,0.0,fg,fg_confident_wrong
+6193,DLSkojSiAPs_210.0_360.0,A girl is showing her hotel room,38.0,150.0,0.9983,0.0,fg,fg_confident_wrong
+6863,UFWQKrcbhjI_210.0_360.0,A man speaks to the camera while he is wearing shades and black biker's helmet.,136.0,150.0,0.9982,0.0,fg,fg_confident_wrong
+6809,E75GN8GXDP4_60.0_210.0,A women walks through a large black gate and towards the forest.,134.0,150.0,0.9982,0.0,fg,fg_confident_wrong
+68,SyMt-tik9q0_360.0_510.0,Man is holding a duck on the bus.,124.0,142.0,0.9982,0.0,fg,fg_confident_wrong
+5775,5oucQKLn88A_210.0_360.0,Woman in pink sari drinks a cocktail.,0.0,32.0,0.9982,0.0,fg,fg_confident_wrong
+1893,N5DpPCcQxJ4_210.0_360.0,Tourist girl filming beautiful neighbourhood with her friend,112.0,150.0,0.9981,0.0,fg,fg_confident_wrong
