@@ -83,7 +83,7 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         outputs = model(**model_inputs)  # 모델에 입력을 넣어 예측 결과(outputs) 생성
         # criterion을 통해 outputs와 targets로부터 개별 loss 항목들을 계산 (dict 형태)
         loss_dict = criterion(outputs, targets)
-        weight_dict = criterion.weight_dict # 각 loss에 곱해줄 가중치 딕셔너리
+        weight_dict = criterion.weight_dict # 각 loss에 곱해줄 가중치 딕셔너리. weight_dict 안에는 aux loss weight도 들어있다
         # 전체 손실
         losses = sum(loss_dict[k] * weight_dict[k] for k in loss_dict.keys() if k in weight_dict)
         time_meters["model_forward_time"].update(time.time() - timer_start)

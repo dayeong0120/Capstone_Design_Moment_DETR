@@ -221,15 +221,43 @@ class SetCriterion(nn.Module):
         targets dicts must contain the key "labels" containing a tensor of dim [nb_target_boxes]
         """
         # TODO add foreground and background classifier.  use all non-matched as background.
+        # ㄴ 매칭된 쿼리 = foreground, 나머지 쿼리 = background로 처리
         assert 'pred_logits' in outputs
         src_logits = outputs['pred_logits']  # (batch_size, #queries, #classes=2)
         # idx is a tuple of two 1D tensors (batch_idx, src_idx), of the same length == #objects in batch
+        # ㄴ _get_src_permutation_idx(indices)는 indices에서 예측 쪽 인덱스만 뽑아서,
+        # 두 개의 1D 텐서 (batch_idx, src_idx)로 바꿔줌 
+            # batch_idx: 이 매칭이 어느 배치 샘플에 속하는지 (예: [0,0,1,1,1,...])
+            # src_idx: 그 배치 샘플 안에서 몇 번째 query인지 (예: [3,7,0,5,...])
         idx = self._get_src_permutation_idx(indices)
+        # idx의 길이는 배치 전체에서 GT 개수의 총합 = FG 개수 
+        # 그 크기 그대로 모든 값을 background_label(=1)로 채운 텐서를 만듦.
         target_classes = torch.full(src_logits.shape[:2], self.background_label,
                                     dtype=torch.int64, device=src_logits.device)  # (batch_size, #queries)
+        # idx가 (batch_idx, src_idx) 형태
+        # target_classes[batch_idx[k], src_idx[k]]에 해당하는 위치들이 선택
+        # 그 위치들을 foreground_label(=0)으로 바꿈 
         target_classes[idx] = self.foreground_label
 
+        # 실제 cross-entropy 분류 loss 계산 
+        """ 자세한 설명 
+            src_logits.transpose(1, 2) : src_logits는 (B, Q, C)인데, F.cross_entropy는 (B, #classes, #queries) 같은 형태를 기대하므로
+            target_classes는 (batch_size, #queries), 각 위치에 0 또는 1이 들어있음.
+            self.empty_weight: 클래스별 weight 텐서 (크기 2)
+                empty_weight = torch.ones(2)
+                empty_weight[-1] = self.eos_coef  # lower weight for background (index 1, foreground index 0)
+                => background 클래스의 손실 비중을 eos_coef만큼 줄여서 배경이 너무 많을 때 FG/BG 불균형 문제를 완화.
+            reduction="none": CE에서 평균을 아직 내지 말고, 원소별 loss 텐서를 그대로 반환시키는 옵션
+        """
+        # loss_ce 형태는 (batch_size, #queries)
+        """ loss_ce 예시
+            [
+                [0.3, 1.2, 0.8, 0.01, 0.5],   # batch 0의 각 query 손실
+                [0.6, 0.1, 0.9, 0.4, 0.2],    # batch 1의 각 query 손실
+            ]
+        """
         loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight, reduction="none")
+        # 각 query의 loss를 하나의 스칼라로 평균
         losses = {'loss_label': loss_ce.mean()}
 
         if log:
@@ -357,17 +385,22 @@ class SetCriterion(nn.Module):
         for loss in self.losses:
             losses.update(self.get_loss(loss, outputs, targets, indices))
 
+        # 보조 손실 (auxiliary loss)를 계산하는 부분 
+        # decoder의 각 layer가 하나의 예측을 내기 때문에, 각 layer마다 loss를 계산해서 총 loss에 더해주는 방식
         # In case of auxiliary losses, we repeat this process with the output of each intermediate layer.
-        if 'aux_outputs' in outputs:
+        if 'aux_outputs' in outputs: # outputs['aux_outputs'] 에는 각 decoder layer의 예측 결과(classification / span 등)
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
-                indices = self.matcher(aux_outputs, targets)
-                for loss in self.losses:
+                # Hungarian matcher를 각 layer 예측에 대해 따로 수행
+                indices = self.matcher(aux_outputs, targets) 
+                for loss in self.losses: # 모델이 계산할 loss 목록
                     if "saliency" == loss:  # skip as it is only in the top layer
                         continue
                     kwargs = {}
+                    # 각 loss 타입(예: classification, span, giou 등)에 따라 loss 계산.
                     l_dict = self.get_loss(loss, aux_outputs, targets, indices, **kwargs)
+                    # aux layer의 loss 이름 뒤에 _i 붙이기 ex) layer 1: loss_class_0
                     l_dict = {k + f'_{i}': v for k, v in l_dict.items()}
-                    losses.update(l_dict)
+                    losses.update(l_dict) # 최종 loss dict에 aux layer loss를 추가
 
         return losses
 
