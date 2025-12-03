@@ -271,7 +271,7 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         logger.info(f"{name} ==> {d}")
     
     if epoch_i in LOG.LOG_EPOCHS:
-        exp_dir = f"logs_hungarian/{opt.expId}"
+        exp_dir = f"logs_hungarian/{opt.exp_id}"
         os.makedirs(exp_dir, exist_ok=True)  # 로그 저장용 폴더 생성
 
         # ====== (1) 메인 로그 파일 ====== (epoch 단위)
