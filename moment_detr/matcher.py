@@ -285,6 +285,8 @@ class HungarianMatcher(nn.Module):
         cost_giou_b  = cost_giou.view(bs, num_queries, -1)
         C_b          = C  # 최종 cost matrix는 이미 (bs, num_queries, total_spans) 형태
 
+        prob_3d = outputs["pred_logits"].softmax(-1) # 로깅시에는 out_prob대신 사용 [bs, Q, C]
+
         # 각 배치마다 반복
         for b, (pred_idx, tgt_idx) in enumerate(indices):
 
@@ -361,10 +363,10 @@ class HungarianMatcher(nn.Module):
                                 float(targets[b]["spans"][gi][0]),
                                 float(targets[b]["spans"][gi][1])
                             ],
-                            
+
                             # FG score 비교
-                            "fg_score_q": float(out_prob[b, q, 1]),  # Query 0의 FG score
-                            "fg_score_matched": float(out_prob[b, q_matched, 1]),  # matched query의 FG score
+                            "fg_score_q": float(prob_3d[b, q, 1]),  # Query 0의 FG score
+                            "fg_score_matched": float(prob_3d[b, q_matched, 1]),  # matched query의 FG score
                         })
 
         # Option 1: 전역 리스트에 저장 (추천)
