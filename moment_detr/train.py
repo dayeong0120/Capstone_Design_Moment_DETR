@@ -145,7 +145,7 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
     if epoch_i in LOG.LOG_EPOCHS:
         os.makedirs("logs_hungarian", exist_ok=True)  # 로그 저장용 폴더 생성
 
-        # 파일명 (epoch 단위)
+        # ====== (1) 메인 로그 파일 ====== (epoch 단위)
         save_path = f"logs_hungarian/epoch_debug_{epoch_i}.jsonl"
         with open(save_path, "w") as f:
 
@@ -165,6 +165,7 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                     "count": LOG.QUERY_MISMATCH_COUNT
                 }) + "\n")
 
+            # **IOU mismatch는 이제 main에 기록하지 않음**
             # # 3) IoU Mismatch Detailed Logs
             # for entry in LOG.IOU_MISMATCH_BUFFER:
             #     rec = {
@@ -215,6 +216,17 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                         "layer": layer_idx,
                         "hist": hist_tensor.tolist()
                     }) + "\n")
+
+        # ====== (2) IoU mismatch 로그 파일 ======
+        mismatch_path = f"logs_hungarian/epoch_iou_mismatch_{epoch_i}.jsonl"
+        with open(mismatch_path, "w") as f2:
+            for entry in LOG.IOU_MISMATCH_BUFFER:
+                rec = {
+                    "type": "iou_mismatch",
+                    "epoch": epoch_i,
+                    **entry
+                }
+                f2.write(json.dumps(rec) + "\n")
 
         # next epoch 위해 버퍼 비우기
         LOG.IOU_MISMATCH_BUFFER.clear()

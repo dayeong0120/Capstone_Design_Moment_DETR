@@ -257,6 +257,16 @@ class HungarianMatcher(nn.Module):
         """
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
 
+        # ======== [추가: predicted spans 계산] ========
+        # outputs["pred_spans"] shape = (bs, num_queries, 2) = [cx, w]
+        pred_cx = outputs["pred_spans"][..., 0]  # (bs, num_queries)
+        pred_w  = outputs["pred_spans"][..., 1]  # (bs, num_queries)
+
+        # convert to start/end
+        pred_start = pred_cx - pred_w / 2
+        pred_end   = pred_cx + pred_w / 2
+        # ============================================
+
         # ------------------------------------------
         # [추가] IoU 높지만 매칭되지 않은 query 기록
         IOU_THRESH = 0.5
@@ -286,10 +296,16 @@ class HungarianMatcher(nn.Module):
             # 이번 배치의 GT 개수
             num_gt = len(targets[b]["spans"])
 
+            INTEREST_QUERIES = [0]  
+
             # 모든 query에 대해 검사
             for q in range(num_queries):
                 # 이미 매칭된 query는 mismatch 후보 아님 → skip
                 if q in matched_query_for_gt.values():
+                    continue
+                
+                # 쿼리 0의 케이스만 검사 
+                if q not in INTEREST_QUERIES:
                     continue
 
                 # 매칭되지 않은 query가 어떤 GT와 IoU가 높은지 확인
@@ -305,10 +321,15 @@ class HungarianMatcher(nn.Module):
 
                     # IoU가 threshold 이상인데 매칭 실패 → 문제 케이스
                     if iou_q >= iou_matched:
+                        # IoU 차이가 너무 작은 경우 제외
+                        if (iou_q - iou_matched) < 0.1:
+                            continue    
                         # 상세 cost breakdown 포함해서 기록
                         iou_mismatch_list.append({
                             "batch": b, # 배치 index
                             "query": q, # 매칭 실패한 query index
+                            "matched_query_index": int(q_matched),
+
                             "gt": gi, # IoU가 높은 GT index
                             "iou_q": iou_q, # IoU 값
                             "class_cost_q":       float(cost_class_b[b, q, gi]),
@@ -319,6 +340,31 @@ class HungarianMatcher(nn.Module):
                             "giou_cost_matched":  float(cost_giou_b[b, q_matched, gi]),
                             "final_cost_q":       float(C_b[b, q, gi]),
                             "final_cost_matched": float(C_b[b, q_matched, gi]),
+                            # ===== predicted span (this query) =====
+                            "pred_span_q": [
+                                float(pred_start[b, q]),
+                                float(pred_end[b, q])
+                            ],
+                            "pred_cx_q": float(pred_cx[b, q]),
+                            "pred_w_q":  float(pred_w[b, q]),
+
+                            # ===== matched query의 predicted span =====
+                            "pred_span_matched": [
+                                float(pred_start[b, q_matched]),
+                                float(pred_end[b, q_matched])
+                            ],
+                            "pred_cx_matched": float(pred_cx[b, q_matched]),
+                            "pred_w_matched":  float(pred_w[b, q_matched]),
+
+                            # ===== GT span =====
+                            "gt_span": [
+                                float(targets[b]["spans"][gi][0]),
+                                float(targets[b]["spans"][gi][1])
+                            ],
+                            
+                            # FG score 비교
+                            "fg_score_q": float(out_prob[b, q, 1]),  # Query 0의 FG score
+                            "fg_score_matched": float(out_prob[b, q_matched, 1]),  # matched query의 FG score
                         })
 
         # Option 1: 전역 리스트에 저장 (추천)
