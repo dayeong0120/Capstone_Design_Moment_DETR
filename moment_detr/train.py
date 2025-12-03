@@ -206,6 +206,16 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                 "std_w":    [float(np.std(L))  for L in LOG.QUERY_SPAN_LEN],
             }) + "\n")
 
+            # 7) Aux layer 단위의 Query Matching Histograms
+            if getattr(LOG, "matching_hist_aux", None) is not None:
+                for layer_idx, hist_tensor in enumerate(LOG.matching_hist_aux):
+                    f.write(json.dumps({
+                        "type": "matching_hist_aux",
+                        "epoch": epoch_i,
+                        "layer": layer_idx,
+                        "hist": hist_tensor.tolist()
+                    }) + "\n")
+
         # next epoch 위해 버퍼 비우기
         LOG.IOU_MISMATCH_BUFFER.clear()
 

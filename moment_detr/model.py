@@ -392,6 +392,24 @@ class SetCriterion(nn.Module):
             for i, aux_outputs in enumerate(outputs['aux_outputs']):
                 # Hungarian matcher를 각 layer 예측에 대해 따로 수행
                 indices = self.matcher(aux_outputs, targets) 
+
+                # ---------------------- [추가] aux layer 쿼리 매칭 히스토그램 ----------------------
+                if LOG.is_training_phase:
+                    if LOG.matching_hist_aux is None:
+                        LOG.matching_hist_aux = []
+
+                    # 현재 layer(i)의 기록 공간이 없으면 생성
+                    if len(LOG.matching_hist_aux) <= i:
+                        num_queries = aux_outputs["pred_spans"].shape[1]
+                        LOG.matching_hist_aux.append(torch.zeros(num_queries, dtype=torch.long))
+
+                    # 매칭된 query index 기록
+                    for (idx_pred, idx_gt) in indices:
+                        for q in idx_pred:
+                            q_idx = int(q.item())
+                            LOG.matching_hist_aux[i][q_idx] += 1
+                # -------------------------------------------------------------------------
+
                 for loss in self.losses: # 모델이 계산할 loss 목록
                     if "saliency" == loss:  # skip as it is only in the top layer
                         continue
