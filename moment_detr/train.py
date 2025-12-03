@@ -34,6 +34,21 @@ logging.basicConfig(format="%(asctime)s.%(msecs)03d:%(levelname)s:%(name)s - %(m
                     datefmt="%Y-%m-%d %H:%M:%S",
                     level=logging.INFO)
 
+# 로깅 관련 요약 통계 함수 
+def safe_stats(arr):
+    if arr is None or len(arr) == 0:
+        return {"mean": 0.0, "std": 0.0, "count": 0}
+    return {
+        "mean": float(np.mean(arr)),
+        "std": float(np.std(arr)),
+        "count": len(arr)
+    }
+
+def safe_ratio(arr):
+    if arr is None or len(arr) == 0:
+        return 0.0
+    return float(sum(arr) / len(arr))
+
 
 def set_seed(seed, use_cuda=True):
     random.seed(seed)
@@ -89,6 +104,13 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         time_meters["model_forward_time"].update(time.time() - timer_start)
         # -----------------------------------------------------------------------------
 
+        # ~~~~~~~~~ [추가] ΔFG / Δlogit / ΔSPAN 로깅 ~~~~~~~~~~~
+        # 1) forward 직후 baseline 기록
+        fg_prob_t = outputs["pred_logits"].softmax(-1)[...,1].detach().cpu()  # FG baseline
+        logit_t = outputs["pred_logits"][...,1].detach().cpu() # raw logit (더 정확한 경향 분석용)
+        span_t = outputs["pred_spans"].detach().cpu()  # span baseline
+        # ~~~~~~~~~~~ 이후 계속 ~~~~~~~~~~~~~
+        
         # ----------- backward (역전파) -----------
         timer_start = time.time()
         optimizer.zero_grad() # 기존에 계산되어 있던 gradient 초기화
@@ -101,6 +123,112 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         optimizer.step()
         time_meters["model_backward_time"].update(time.time() - timer_start)
         # ----------------------------------------
+
+        # ~~~~~~~~~~ 2) optimizer.step() 후 같은 배치로 다시 forward ~~~~~~~~~~~
+        with torch.no_grad():
+            outputs_t1 = model(**model_inputs)
+            fg_prob_t1 = outputs_t1["pred_logits"].softmax(-1)[...,1].cpu()
+            logit_t1 = outputs_t1["pred_logits"][...,1].cpu()
+            span_t1 = outputs_t1["pred_spans"].cpu()
+        
+        # 3) 변화량 계산
+        delta_fg = fg_prob_t1 - fg_prob_t # (bs, Q)
+        delta_logit = logit_t1 - logit_t
+        delta_span = span_t1 - span_t # (bs, Q, 2)
+        delta_cx = delta_span[...,0] # (bs, Q)    
+        delta_w  = delta_span[...,1] # (bs, Q)     
+
+        # ==== 로깅 버퍼 초기화 ====
+        if LOG.DELTA_FG_MATCHED is None:
+            Q = delta_fg.shape[1]
+            LOG.DELTA_FG_MATCHED   = [[] for _ in range(Q)]
+            LOG.DELTA_FG_UNMATCHED = [[] for _ in range(Q)]
+            LOG.DELTA_LOGIT_MATCHED   = [[] for _ in range(Q)]
+            LOG.DELTA_LOGIT_UNMATCHED = [[] for _ in range(Q)]
+
+            LOG.TOWARDS_MATCHED = [[] for _ in range(Q)]
+            LOG.DELTA_CX_MATCHED = [[] for _ in range(Q)]
+            LOG.DELTA_W_MATCHED  = [[] for _ in range(Q)]
+
+            LOG.CX_INC_UNMATCHED = [[] for _ in range(Q)]
+            LOG.CX_DEC_UNMATCHED = [[] for _ in range(Q)]
+            LOG.W_INC_UNMATCHED  = [[] for _ in range(Q)]
+            LOG.W_DEC_UNMATCHED  = [[] for _ in range(Q)]
+
+            LOG.DELTA_CX_UNMATCHED = [[] for _ in range(Q)]
+            LOG.DELTA_W_UNMATCHED = [[] for _ in range(Q)]
+
+        # ==== 현재 배치 매칭 정보 ====
+        match = LOG.CURR_MATCH     # list of (pred_idx, gt_idx) for each batch
+        bs = delta_fg.shape[0]
+        Q = delta_fg.shape[1]
+
+        for b in range(bs):
+            # 매칭 dict 생성: q → gt_index
+            batch_pred, batch_gt = match[b]
+            matched_dict = { int(q): int(gi) for q, gi in zip(batch_pred.tolist(), batch_gt.tolist()) }
+
+            for q in range(Q):
+                is_matched = (q in matched_dict)
+
+                cx0 = float(span_t[b,q,0])
+                cx1 = float(span_t1[b,q,0])
+                w0  = float(span_t[b,q,1])
+                w1  = float(span_t1[b,q,1])
+
+                # ==== (A) matched → GT 기준 이동 체크 ====
+                if q in matched_dict:
+                    gi = matched_dict[q]
+                    gt_cx = float(targets["span_labels"][b]["spans"][gi][0])
+
+                    moved_towards = abs(cx1 - gt_cx) < abs(cx0 - gt_cx) # 역전파 후 GT와의 차이가 더 작아졌는지 확인 
+
+                    LOG.TOWARDS_MATCHED[q].append(1 if moved_towards else 0)
+                    LOG.DELTA_CX_MATCHED[q].append(cx1 - cx0)
+                    LOG.DELTA_W_MATCHED[q].append(w1 - w0)
+
+                    # raw sample (matched만)
+                    if len(LOG.SAMPLE_SPAN_MOVES) < 200:
+                        LOG.SAMPLE_SPAN_MOVES.append({
+                            "query": q,
+                            "batch": b,
+                            "matched": True,
+                            "cx_t": cx0,
+                            "cx_t1": cx1,
+                            "gt_cx": gt_cx,
+                            "towards": moved_towards,
+                            "delta_cx": cx1 - cx0,
+                            "delta_w": w1 - w0
+                        })
+                # ==== (B) unmatched → drift 패턴만 체크 ====
+                else:
+                    LOG.CX_INC_UNMATCHED[q].append(1 if cx1 > cx0 else 0)
+                    LOG.CX_DEC_UNMATCHED[q].append(1 if cx1 < cx0 else 0)
+                    LOG.W_INC_UNMATCHED[q].append(1 if w1 > w0 else 0)
+                    LOG.W_DEC_UNMATCHED[q].append(1 if w1 < w0 else 0)
+                    LOG.DELTA_CX_UNMATCHED[q].append(cx1 - cx0)
+                    LOG.DELTA_W_UNMATCHED[q].append(w1 - w0)
+
+                    # raw sample (unmatched drift)
+                    if len(LOG.SAMPLE_SPAN_MOVES) < 200:
+                        LOG.SAMPLE_SPAN_MOVES.append({
+                            "query": q,
+                            "batch": b,
+                            "matched": False,
+                            "cx_t": cx0,
+                            "cx_t1": cx1,
+                            "delta_cx": cx1 - cx0,
+                            "delta_w": w1 - w0
+                        })
+                
+                # ---- ΔFG 로깅 ----
+                if is_matched:
+                    LOG.DELTA_FG_MATCHED[q].append(float(delta_fg[b, q]))
+                    LOG.DELTA_LOGIT_MATCHED[q].append(float(delta_logit[b, q]))
+                else:
+                    LOG.DELTA_FG_UNMATCHED[q].append(float(delta_fg[b, q]))
+                    LOG.DELTA_LOGIT_UNMATCHED[q].append(float(delta_logit[b, q]))
+        # ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
         # 전체 손실 값을 float로 변환해 logging용으로 loss_dict에 추가
         loss_dict["loss_overall"] = float(losses)  # for logging only
@@ -143,10 +271,11 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         logger.info(f"{name} ==> {d}")
     
     if epoch_i in LOG.LOG_EPOCHS:
-        os.makedirs("logs_hungarian", exist_ok=True)  # 로그 저장용 폴더 생성
+        exp_dir = f"logs_hungarian/{opt.expId}"
+        os.makedirs(exp_dir, exist_ok=True)  # 로그 저장용 폴더 생성
 
         # ====== (1) 메인 로그 파일 ====== (epoch 단위)
-        save_path = f"logs_hungarian/epoch_debug_{epoch_i}.jsonl"
+        save_path = f"{exp_dir}/epoch_debug_{epoch_i}.jsonl"
         with open(save_path, "w") as f:
 
             # 1) Query Matching Histogram
@@ -217,8 +346,69 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                         "hist": hist_tensor.tolist()
                     }) + "\n")
 
+            # 8) ΔFG matched/unmatched 평균
+            if LOG.DELTA_FG_MATCHED is not None:
+                delta_fg_matched_stats = [
+                    {"query": q, **safe_stats(LOG.DELTA_FG_MATCHED[q])}
+                    for q in range(Q)
+                ]
+                delta_fg_unmatched_stats = [
+                    {"query": q, **safe_stats(LOG.DELTA_FG_UNMATCHED[q])}
+                    for q in range(Q)
+                ]
+
+                f.write(json.dumps({
+                    "type": "delta_fg_stats",
+                    "epoch": epoch_i,
+                    "matched": delta_fg_matched_stats,
+                    "unmatched": delta_fg_unmatched_stats
+                }) + "\n")
+            
+            #  9) matched일때 GT 방향으로 이동 비율
+            if LOG.TOWARDS_MATCHED is not None:
+                towards_ratio = [safe_ratio(vals) for vals in LOG.TOWARDS_MATCHED]
+
+                f.write(json.dumps({
+                    "type": "matched_towards_gt",
+                    "epoch": epoch_i,
+                    "towards_ratio": towards_ratio
+                }) + "\n")
+            
+            # 10) matched일 때 Δcx / Δw 통계
+            if LOG.DELTA_CX_MATCHED is not None:
+                cx_stats = [safe_stats(vals) for vals in LOG.DELTA_CX_MATCHED]
+                w_stats  = [safe_stats(vals) for vals in LOG.DELTA_W_MATCHED]
+
+                f.write(json.dumps({
+                    "type": "matched_span_change",
+                    "epoch": epoch_i,
+                    "delta_cx": cx_stats,
+                    "delta_w": w_stats
+                }) + "\n")
+            
+            # 11) unmatched일 때 drift 비율 및 크기
+            if LOG.CX_INC_UNMATCHED is not None:
+                cx_inc_ratio = [safe_ratio(vals) for vals in LOG.CX_INC_UNMATCHED]
+                cx_dec_ratio = [safe_ratio(vals) for vals in LOG.CX_DEC_UNMATCHED]
+                w_inc_ratio  = [safe_ratio(vals) for vals in LOG.W_INC_UNMATCHED]
+                w_dec_ratio  = [safe_ratio(vals) for vals in LOG.W_DEC_UNMATCHED]
+
+                cx_change_stats = [safe_stats(vals) for vals in LOG.DELTA_CX_UNMATCHED]
+                w_change_stats  = [safe_stats(vals) for vals in LOG.DELTA_W_UNMATCHED]
+
+                f.write(json.dumps({
+                    "type": "unmatched_drift",
+                    "epoch": epoch_i,
+                    "cx_inc_ratio": cx_inc_ratio,
+                    "cx_dec_ratio": cx_dec_ratio,
+                    "w_inc_ratio": w_inc_ratio,
+                    "w_dec_ratio": w_dec_ratio,
+                    "delta_cx_stats": cx_change_stats,
+                    "delta_w_stats": w_change_stats
+                }) + "\n")
+
         # ====== (2) IoU mismatch 로그 파일 ======
-        mismatch_path = f"logs_hungarian/epoch_iou_mismatch_{epoch_i}.jsonl"
+        mismatch_path = f"{exp_dir}/epoch_iou_mismatch_{epoch_i}.jsonl"
         with open(mismatch_path, "w") as f2:
             for entry in LOG.IOU_MISMATCH_BUFFER:
                 rec = {
@@ -228,8 +418,38 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                 }
                 f2.write(json.dumps(rec) + "\n")
 
+        # ====== (3) Raw Span Movement Logs ======
+        sample_path = f"{exp_dir}/epoch_span_moves_{epoch_i}.jsonl"
+        with open(sample_path, "w") as f3:
+            if LOG.SAMPLE_SPAN_MOVES is not None:
+                for entry in LOG.SAMPLE_SPAN_MOVES[:200]:
+                    rec = {
+                        "type": "span_move_case",
+                        "epoch": epoch_i,
+                        **entry
+                    }
+                    f3.write(json.dumps(rec) + "\n")
+
         # next epoch 위해 버퍼 비우기
         LOG.IOU_MISMATCH_BUFFER.clear()
+        LOG.DELTA_FG_MATCHED = None
+        LOG.DELTA_FG_UNMATCHED = None
+        LOG.DELTA_LOGIT_MATCHED = None
+        LOG.DELTA_LOGIT_UNMATCHED = None
+
+        LOG.TOWARDS_MATCHED = None
+        LOG.DELTA_CX_MATCHED = None
+        LOG.DELTA_W_MATCHED = None
+
+        LOG.CX_INC_UNMATCHED = None
+        LOG.CX_DEC_UNMATCHED = None
+        LOG.W_INC_UNMATCHED = None
+        LOG.W_DEC_UNMATCHED = None
+
+        LOG.DELTA_CX_UNMATCHED = None
+        LOG.DELTA_W_UNMATCHED = None
+
+        LOG.SAMPLE_SPAN_MOVES = []
 
 
 def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset, opt):

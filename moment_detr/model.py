@@ -379,7 +379,16 @@ class SetCriterion(nn.Module):
                     q_idx = int(q.item())   # tensor형태로 되어있는 query 인덱스를  → 파이썬 int로 변환
                     LOG.matching_hist[q_idx] += 1
         # ---------------------------------------------------------------------
-       
+        
+        # 이번 배치의 매칭 정보 저장 (delta FG score, span 등 확인하기 위함 )
+        if LOG.is_training_phase:
+            LOG.CURR_MATCH = []
+            for (idx_pred, idx_gt) in indices:
+                LOG.CURR_MATCH.append((
+                    idx_pred.detach().cpu(),
+                    idx_gt.detach().cpu()
+                ))
+
         # Compute all the requested losses
         losses = {}
         for loss in self.losses:
