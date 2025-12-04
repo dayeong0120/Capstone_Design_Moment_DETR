@@ -195,7 +195,7 @@ class SetCriterion(nn.Module):
         src_spans = outputs['pred_spans'][idx]  # (#spans, max_v_l * 2)
         tgt_spans = torch.cat([t['spans'][i] for t, (_, i) in zip(targets, indices)], dim=0)  # (#spans, 2)
         if self.span_loss_type == "l1":
-            loss_span = F.l1_loss(src_spans, tgt_spans, reduction='none')
+            loss_span = F.l1_loss(src_spans, tgt_spans, reduction='none') # weighted L1 loss ? 
             loss_giou = 1 - torch.diag(generalized_temporal_iou(span_cxw_to_xx(src_spans), span_cxw_to_xx(tgt_spans)))
         else:  # ce
             n_spans = src_spans.shape[0]

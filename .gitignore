@@ -76,8 +76,6 @@ standalone_eval/
 .vscode/
 sftp.json
 
-logs_hungarian/
-
 # Python caches
 __pycache__/
 *.pyc

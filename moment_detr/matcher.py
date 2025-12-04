@@ -272,6 +272,9 @@ class HungarianMatcher(nn.Module):
         IOU_THRESH = 0.5
 
         iou_mismatch_list = []  # 이번 매칭 결과에서 발견된 mismatch를 저장할 리스트
+        # 쿼리 mismatch 카운트 초기화
+        if LOG.QUERY_MISMATCH_COUNT is None:
+            LOG.QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
 
         # cost_giou는 "-IoU" 형태의 값이므로 반대로 부호를 바꾸면 IoU 값이 됨
         # cost_giou shape: (bs * num_queries, total_spans)
@@ -298,88 +301,93 @@ class HungarianMatcher(nn.Module):
             # 이번 배치의 GT 개수
             num_gt = len(targets[b]["spans"])
 
-            INTEREST_QUERIES = [0]  
-
-            # 모든 query에 대해 검사
-            for q in range(num_queries):
-                # 이미 매칭된 query는 mismatch 후보 아님 → skip
-                if q in matched_query_for_gt.values():
+            # GT 기준으로 mismatch 탐지
+            for gi in range(num_gt):
+                
+                # 이 GT에 실제로 매칭된 query
+                q_matched = matched_query_for_gt.get(gi, None)
+                if q_matched is None:
                     continue
                 
-                # 쿼리 0의 케이스만 검사 
-                if q not in INTEREST_QUERIES:
-                    continue
+                # 매칭된 쿼리의 IoU
+                iou_matched = float(giou_mat[b, q_matched, gi])
 
-                # 매칭되지 않은 query가 어떤 GT와 IoU가 높은지 확인
-                for gi in range(num_gt):
-                    if gi not in matched_query_for_gt:
+                # 모든 query에 대해 검사
+                for q in range(num_queries):
+                    # 이미 매칭된 query는 mismatch 후보 아님 → skip
+                    if q == q_matched:
                         continue
 
-                    q_matched = matched_query_for_gt[gi]
+                    # 이 query가 다른 GT에 매칭된 경우 skip
+                    if q in matched_query_for_gt.values():
+                        continue
 
-                     # IoU 값 가져오기
                     iou_q = float(giou_mat[b, q, gi])
-                    iou_matched  = float(giou_mat[b, q_matched, gi])
 
-                    # IoU가 threshold 이상인데 매칭 실패 → 문제 케이스
-                    if iou_q >= iou_matched:
-                        # IoU 차이가 너무 작은 경우 제외
-                        if (iou_q - iou_matched) < 0.1:
-                            continue    
-                        # 상세 cost breakdown 포함해서 기록
-                        iou_mismatch_list.append({
-                            "batch": b, # 배치 index
-                            "query": q, # 매칭 실패한 query index
-                            "matched_query_index": int(q_matched),
+                    # mismatch 조건
+                    if iou_q > iou_matched + 0.1:
+                        LOG.QUERY_MISMATCH_COUNT[q] += 1
 
-                            "gt": gi, # IoU가 높은 GT index
-                            "iou_q": iou_q, # IoU 값
-                            "class_cost_q":       float(cost_class_b[b, q, gi]),
-                            "class_cost_matched": float(cost_class_b[b, q_matched, gi]),
-                            "l1_cost_q":          float(cost_span_b[b, q, gi]),
-                            "l1_cost_matched":    float(cost_span_b[b, q_matched, gi]),
-                            "giou_cost_q":        float(cost_giou_b[b, q, gi]),
-                            "giou_cost_matched":  float(cost_giou_b[b, q_matched, gi]),
-                            "final_cost_q":       float(C_b[b, q, gi]),
-                            "final_cost_matched": float(C_b[b, q_matched, gi]),
-                            # ===== predicted span (this query) =====
-                            "pred_span_q": [
-                                float(pred_start[b, q]),
-                                float(pred_end[b, q])
-                            ],
-                            "pred_cx_q": float(pred_cx[b, q]),
-                            "pred_w_q":  float(pred_w[b, q]),
+                        # 관심 쿼리만 상세 기록
+                        if LOG.WIDE_QUERY_FINAL is not None and q == LOG.WIDE_QUERY_FINAL:
+                            # 정렬을 위해 미리 필요한 diff 값들 계산
+                            iou_diff  = iou_q - iou_matched
+                            fg_diff   = float(prob_3d[b, q, 1]) - float(prob_3d[b, q_matched, 1])
+                            cost_diff = float(C_b[b, q, gi]) - float(C_b[b, q_matched, gi])
 
-                            # ===== matched query의 predicted span =====
-                            "pred_span_matched": [
-                                float(pred_start[b, q_matched]),
-                                float(pred_end[b, q_matched])
-                            ],
-                            "pred_cx_matched": float(pred_cx[b, q_matched]),
-                            "pred_w_matched":  float(pred_w[b, q_matched]),
+                            # 상세 cost breakdown 포함해서 기록
+                            iou_mismatch_list.append({
+                                "batch": b, # 배치 index
+                                "query": q, # 매칭 실패한 query index
+                                "matched_query_index": int(q_matched),
 
-                            # ===== GT span =====
-                            "gt_span": [
-                                float(targets[b]["spans"][gi][0]),
-                                float(targets[b]["spans"][gi][1])
-                            ],
+                                "gt": gi, # IoU가 높은 GT index
+                                "iou_q": iou_q, # IoU 값
+                                "iou_matched": iou_matched,
+                                "iou_diff": iou_diff,     # ⭐ 정렬용 필드 1
+                                
+                                "class_cost_q":       float(cost_class_b[b, q, gi]),
+                                "class_cost_matched": float(cost_class_b[b, q_matched, gi]),
 
-                            # FG score 비교
-                            "fg_score_q": float(prob_3d[b, q, 1]),  # Query 0의 FG score
-                            "fg_score_matched": float(prob_3d[b, q_matched, 1]),  # matched query의 FG score
-                        })
+                                "l1_cost_q":          float(cost_span_b[b, q, gi]),
+                                "l1_cost_matched":    float(cost_span_b[b, q_matched, gi]),
 
-        # Option 1: 전역 리스트에 저장 (추천)
-        LOG.IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
+                                "giou_cost_q":        float(cost_giou_b[b, q, gi]),
+                                "giou_cost_matched":  float(cost_giou_b[b, q_matched, gi]),
 
-        # 쿼리 개수만큼 카운터 리스트 초기화
-        if LOG.QUERY_MISMATCH_COUNT is None:
-            LOG.QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
+                                "final_cost_q":       float(C_b[b, q, gi]),
+                                "final_cost_matched": float(C_b[b, q_matched, gi]),
+                                "cost_diff": cost_diff,   # ⭐ 정렬용 필드 2
+                                # ===== predicted span (this query) =====
+                                "pred_span_q": [
+                                    float(pred_start[b, q]),
+                                    float(pred_end[b, q])
+                                ],
+                                "pred_cx_q": float(pred_cx[b, q]),
+                                "pred_w_q":  float(pred_w[b, q]),
 
-        # 쿼리별 mismatch 카운트 반영 
-        for entry in iou_mismatch_list:
-            q = entry["query"]
-            LOG.QUERY_MISMATCH_COUNT[q] += 1
+                                # ===== matched query의 predicted span =====
+                                "pred_span_matched": [
+                                    float(pred_start[b, q_matched]),
+                                    float(pred_end[b, q_matched])
+                                ],
+                                "pred_cx_matched": float(pred_cx[b, q_matched]),
+                                "pred_w_matched":  float(pred_w[b, q_matched]),
+
+                                # ===== GT span =====
+                                "gt_span": [
+                                    float(targets[b]["spans"][gi][0]),
+                                    float(targets[b]["spans"][gi][1])
+                                ],
+
+                                # FG score 비교
+                                "fg_score_q": float(prob_3d[b, q, 1]),  # Query 0의 FG score
+                                "fg_score_matched": float(prob_3d[b, q_matched, 1]),  # matched query의 FG score
+                                "fg_diff": fg_diff
+                            })
+
+            # Option 1: 전역 리스트에 저장 (추천)
+            LOG.IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
         # ------------------------------------------
 
         # 이 numpy 배열들을 torch 텐서로 감싸서 반환

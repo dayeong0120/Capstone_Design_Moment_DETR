@@ -408,6 +408,15 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                 }) + "\n")
 
         # ====== (2) IoU mismatch 로그 파일 ======
+        if LOG.IOU_MISMATCH_BUFFER is not None and len(LOG.IOU_MISMATCH_BUFFER) > 0:
+
+            # IoU diff 기준 정렬 (넓은 쿼리 문제 분석에 가장 의의 있음)
+            LOG.IOU_MISMATCH_BUFFER.sort(key=lambda x: x["iou_diff"], reverse=True)
+
+            # top-K만 남긴다 (너가 원하는 숫자로 조절 가능)
+            TOP_K = 100
+            LOG.IOU_MISMATCH_BUFFER = LOG.IOU_MISMATCH_BUFFER[:TOP_K]
+        
         mismatch_path = f"{exp_dir}/epoch_iou_mismatch_{epoch_i}.jsonl"
         with open(mismatch_path, "w") as f2:
             for entry in LOG.IOU_MISMATCH_BUFFER:
@@ -429,6 +438,19 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
                         **entry
                     }
                     f3.write(json.dumps(rec) + "\n")
+        
+        # epoch_i 는 0부터 시작한다고 가정
+        if LOG.WIDE_QUERY_FINAL is None and epoch_i == 7:
+            # mean_w는 matcher에서 계속 기록한 LOG.QUERY_SPAN_LEN로부터 계산 가능
+            # 쿼리 개수
+            num_queries = len(LOG.QUERY_SPAN_LEN)
+            # epoch 7 동안 쌓인 w(mean) 계산
+            mean_w = [np.mean(LOG.QUERY_SPAN_LEN[q]) for q in range(num_queries)]
+            # 가장 폭이 넓은 쿼리 선택
+            wide_q = int(np.argmax(mean_w))
+
+            LOG.WIDE_QUERY_FINAL = wide_q
+            print(f"[INFO] Fixed wide query at epoch 7 → {wide_q}")
 
         # next epoch 위해 버퍼 비우기
         LOG.IOU_MISMATCH_BUFFER.clear()
@@ -448,6 +470,9 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
 
         LOG.DELTA_CX_UNMATCHED = None
         LOG.DELTA_W_UNMATCHED = None
+
+        LOG.QUERY_SPAN_CX = None
+        LOG.QUERY_SPAN_LEN = None
 
         LOG.SAMPLE_SPAN_MOVES = []
 
