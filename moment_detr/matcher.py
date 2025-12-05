@@ -300,17 +300,22 @@ class HungarianMatcher(nn.Module):
 
             # 이번 배치의 GT 개수
             num_gt = len(targets[b]["spans"])
+            #  batch b의 GT column 시작
+            start_col = sum(sizes[:b])
 
             # GT 기준으로 mismatch 탐지
             for gi in range(num_gt):
-                
+            
                 # 이 GT에 실제로 매칭된 query
                 q_matched = matched_query_for_gt.get(gi, None)
                 if q_matched is None:
                     continue
                 
+                # 현재 GT의 열 인덱스 
+                col = start_col + gi
+                
                 # 매칭된 쿼리의 IoU
-                iou_matched = float(giou_mat[b, q_matched, gi])
+                iou_matched = float(giou_mat[b, q_matched, col])
 
                 # 모든 query에 대해 검사
                 for q in range(num_queries):
@@ -322,18 +327,18 @@ class HungarianMatcher(nn.Module):
                     if q in matched_query_for_gt.values():
                         continue
 
-                    iou_q = float(giou_mat[b, q, gi])
+                    iou_q = float(giou_mat[b, q, col])
 
                     # mismatch 조건
                     if iou_q > iou_matched + 0.1:
-                        LOG.QUERY_MISMATCH_COUNT[q] += 1
+                        LOG.QUERY_MISMATCH_COUNT[q] += 1 
 
                         # 관심 쿼리만 상세 기록
                         if LOG.WIDE_QUERY_FINAL is not None and q == LOG.WIDE_QUERY_FINAL:
                             # 정렬을 위해 미리 필요한 diff 값들 계산
                             iou_diff  = iou_q - iou_matched
                             fg_diff   = float(prob_3d[b, q, 1]) - float(prob_3d[b, q_matched, 1])
-                            cost_diff = float(C_b[b, q, gi]) - float(C_b[b, q_matched, gi])
+                            cost_diff = float(C_b[b, q, col]) - float(C_b[b, q_matched, col])
 
                             # 상세 cost breakdown 포함해서 기록
                             iou_mismatch_list.append({
@@ -341,22 +346,22 @@ class HungarianMatcher(nn.Module):
                                 "query": q, # 매칭 실패한 query index
                                 "matched_query_index": int(q_matched),
 
-                                "gt": gi, # IoU가 높은 GT index
+                                "gt": col, # IoU가 높은 GT index
                                 "iou_q": iou_q, # IoU 값
                                 "iou_matched": iou_matched,
                                 "iou_diff": iou_diff,     # ⭐ 정렬용 필드 1
                                 
-                                "class_cost_q":       float(cost_class_b[b, q, gi]),
-                                "class_cost_matched": float(cost_class_b[b, q_matched, gi]),
+                                "class_cost_q":       float(cost_class_b[b, q, col]),
+                                "class_cost_matched": float(cost_class_b[b, q_matched, col]),
 
-                                "l1_cost_q":          float(cost_span_b[b, q, gi]),
-                                "l1_cost_matched":    float(cost_span_b[b, q_matched, gi]),
+                                "l1_cost_q":          float(cost_span_b[b, q, col]),
+                                "l1_cost_matched":    float(cost_span_b[b, q_matched, col]),
 
-                                "giou_cost_q":        float(cost_giou_b[b, q, gi]),
-                                "giou_cost_matched":  float(cost_giou_b[b, q_matched, gi]),
+                                "giou_cost_q":        float(cost_giou_b[b, q, col]),
+                                "giou_cost_matched":  float(cost_giou_b[b, q_matched, col]),
 
-                                "final_cost_q":       float(C_b[b, q, gi]),
-                                "final_cost_matched": float(C_b[b, q_matched, gi]),
+                                "final_cost_q":       float(C_b[b, q, col]),
+                                "final_cost_matched": float(C_b[b, q_matched, col]),
                                 "cost_diff": cost_diff,   # ⭐ 정렬용 필드 2
                                 # ===== predicted span (this query) =====
                                 "pred_span_q": [
