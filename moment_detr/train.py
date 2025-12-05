@@ -65,6 +65,24 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
     LOG.IOU_MISMATCH_BUFFER = [] 
     LOG.QUERY_MISMATCH_COUNT = None
     LOG.QUERY_FG_SCORES = None
+
+    LOG.DELTA_FG_MATCHED = None
+    LOG.DELTA_FG_UNMATCHED = None
+    LOG.DELTA_LOGIT_MATCHED = None
+    LOG.DELTA_LOGIT_UNMATCHED = None
+
+    LOG.TOWARDS_MATCHED = None
+    LOG.DELTA_CX_MATCHED = None
+    LOG.DELTA_W_MATCHED = None
+    LOG.CX_INC_UNMATCHED = None
+    LOG.CX_DEC_UNMATCHED = None
+    LOG.W_INC_UNMATCHED = None
+    LOG.W_DEC_UNMATCHED = None
+    LOG.DELTA_CX_UNMATCHED = None
+    LOG.DELTA_W_UNMATCHED = None
+    LOG.QUERY_SPAN_CX = None
+    LOG.QUERY_SPAN_LEN = None
+    LOG.SAMPLE_SPAN_MOVES = []
     logger.info(f"[Epoch {epoch_i+1}]")
 
     # 모델과 criterion을 학습모드로 전환 
@@ -451,30 +469,6 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
 
             LOG.WIDE_QUERY_FINAL = wide_q
             print(f"[INFO] Fixed wide query at epoch 7 → {wide_q}")
-
-        # next epoch 위해 버퍼 비우기
-        LOG.IOU_MISMATCH_BUFFER.clear()
-        LOG.DELTA_FG_MATCHED = None
-        LOG.DELTA_FG_UNMATCHED = None
-        LOG.DELTA_LOGIT_MATCHED = None
-        LOG.DELTA_LOGIT_UNMATCHED = None
-
-        LOG.TOWARDS_MATCHED = None
-        LOG.DELTA_CX_MATCHED = None
-        LOG.DELTA_W_MATCHED = None
-
-        LOG.CX_INC_UNMATCHED = None
-        LOG.CX_DEC_UNMATCHED = None
-        LOG.W_INC_UNMATCHED = None
-        LOG.W_DEC_UNMATCHED = None
-
-        LOG.DELTA_CX_UNMATCHED = None
-        LOG.DELTA_W_UNMATCHED = None
-
-        LOG.QUERY_SPAN_CX = None
-        LOG.QUERY_SPAN_LEN = None
-
-        LOG.SAMPLE_SPAN_MOVES = []
 
 
 def train(model, criterion, optimizer, lr_scheduler, train_dataset, val_dataset, opt):
