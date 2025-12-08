@@ -109,7 +109,7 @@ class HungarianMatcher(nn.Module):
         # 각 batch & query별 score 누적
         for b in range(bs):
             for q in range(num_queries):
-                LOG.QUERY_FG_SCORES[q].append(float(fg_scores[0, q]))
+                LOG.QUERY_FG_SCORES[q].append(float(fg_scores[b, q]))
         # ------------------------------------------
         # [추가] Query별 예측 구간의 중심값 및 길이 기록
         pred_spans = outputs["pred_spans"]  # (bs, num_queries, 2)

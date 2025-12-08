@@ -62,6 +62,7 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
 
     LOG.is_training_phase = True            # ← 훈련 중이라는 플래그 켜기
     LOG.matching_hist = None                # ← 매 epoch마다 초기화
+    LOG.matching_hist_aux = None
     LOG.IOU_MISMATCH_BUFFER = [] 
     LOG.QUERY_MISMATCH_COUNT = None
     LOG.QUERY_FG_SCORES = None
