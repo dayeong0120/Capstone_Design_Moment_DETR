@@ -1,0 +1,51 @@
+﻿qid,vid,query,pred_start,pred_end,conf,iou,category,category_detail
+2579,NUsG9BgSes0_210.0_360.0,A girl and her mother cooked while talking with each other on facetime.,0.0,76.0,1.0,0.0,fg,fg_confident_wrong
+8312,-_s0sXOfS3w_510.0_660.0,A guy with grey top is showing a box filled with rubbish.,114.0,140.0,1.0,0.0,fg,fg_confident_wrong
+6950,qBe1PUrRHUo_510.0_660.0,"A young woman reading in bed finally finishes the book ""Atomic Habits"" after many months and really liked it",108.0,150.0,1.0,0.0,fg,fg_confident_wrong
+8730,qaDShOiRe-0_510.0_660.0,a woman addresses the camera while alone,104.0,138.0,1.0,0.0,fg,fg_confident_wrong
+8942,B1RpWUrs06U_660.0_810.0,A man is saying goodnight to his twin children in their bedroom.,60.0,90.0,1.0,0.0,fg,fg_confident_wrong
+2264,Z8MR9i08l6g_360.0_510.0,Woman in hoodie holds the camera like she's taking a selfie.,16.0,48.0,1.0,0.0,fg,fg_confident_wrong
+9489,7QNJyAIprhg_60.0_210.0,Policemen holding arms taking cover behind a truck.,122.0,150.0,1.0,0.0,fg,fg_confident_wrong
+5246,WINZiMUH7Lk_210.0_360.0,Young girl monologues with a subscribe button underneath.,108.0,144.0,1.0,0.0,fg,fg_confident_wrong
+7311,gY3GOIn80k8_660.0_810.0,A woman is sitting next to a man speaking about a future trip.,66.0,138.0,1.0,0.0,fg,fg_confident_wrong
+7571,CkWOpyrAXdw_510.0_660.0,Woman fries cauliflower in a saute pan.,84.0,148.0,1.0,0.0,fg,fg_confident_wrong
+5614,FXULtwAVFqQ_360.0_510.0,Woman monologues while lying in bed.,0.0,46.0,1.0,0.0,fg,fg_confident_wrong
+7555,IdpHJK90VDw_660.0_810.0,Man in a black suit escorts a woman to a doorway.,112.0,136.0,0.9999,0.0,fg,fg_confident_wrong
+3915,izeyQalOwGg_60.0_210.0,Man in white top sits in a a van backseat.,70.0,88.0,0.9999,0.0,fg,fg_confident_wrong
+5168,6aFvTqmnrJQ_60.0_210.0,A man in black is speaking to a camera on a moving train.,0.0,38.0,0.9999,0.0,fg,fg_confident_wrong
+601,pu5p_ojK6BI_360.0_510.0,Man talks to the camera under candlelight.,114.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+6393,_9vleIcuQd0_360.0_510.0,A blonde woman is speaking from the top of a building showing off the views.,120.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+9267,OtVQCgxtjmE_60.0_210.0,A weather woman is motioning to show a large storm coming in on the map.,114.0,148.0,0.9999,0.0,fg,fg_confident_wrong
+8691,hoalP6K54Tk_510.0_660.0,A woman walks into a grocery store and empties her basket of items after.,60.0,94.0,0.9999,0.0,fg,fg_confident_wrong
+9325,kBxxo04zr98_60.0_210.0,A TV news program reports people were lining up for a park spigot that had water pressure during a drought,4.0,50.0,0.9999,0.0,fg,fg_confident_wrong
+389,uSAGSbauHBs_210.0_360.0,Man is talking in front of a large pile of antlers.,92.0,126.0,0.9999,0.0,fg,fg_confident_wrong
+7432,T9ptpjvuIP8_660.0_810.0,Man and woman walk down a hallway and stairs.,0.0,28.0,0.9999,0.0,fg,fg_confident_wrong
+5468,9kF-Rw5PrDY_210.0_360.0,Names of countries are displayed on a wall.,72.0,94.0,0.9999,0.0,fg,fg_confident_wrong
+3513,K3lDAtwYt_4_210.0_360.0,Couple boarding on ferry and sharing romantic scene of the evening,0.0,48.0,0.9999,0.0,fg,fg_confident_wrong
+2862,pWtzuphf8nc_360.0_510.0,A woman in glasses and grey sweater is talking in her bedroom.,128.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+7188,7PKEbzSNwts_510.0_660.0,A woman talks cheerfully in front of a shelf full of shoes in her home,28.0,74.0,0.9999,0.0,fg,fg_confident_wrong
+7046,h6sCcWcLU7A_510.0_660.0,Woman gives a speech with a mic.,122.0,146.0,0.9999,0.0,fg,fg_confident_wrong
+8750,h6sCcWcLU7A_660.0_810.0,The birthday girl is receiving a lot of warm hugs from her friends,116.0,148.0,0.9999,0.0,fg,fg_confident_wrong
+1919,xXWKd1b3SHM_360.0_510.0,The couple visit a village market.,12.0,46.0,0.9999,0.0,fg,fg_confident_wrong
+7745,UGafHWHJrLg_60.0_210.0,A girl is excited about showing her bed with a big red heart in it.,62.0,100.0,0.9999,0.0,fg,fg_confident_wrong
+2302,OvxqaVabXiE_360.0_510.0,A view of beach surrounded by mountains in Cape Town,118.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+9819,t9podLZljz0_60.0_210.0,A woman in a blue dress is speaking in front of a display of blue banners with stars on them.,112.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+5038,uE1ciE0PCIU_360.0_510.0,Woman eats food from a casserole.,88.0,114.0,0.9999,0.0,fg,fg_confident_wrong
+7834,QHFy-nWNJYk_360.0_510.0,Tourists are stopping to look at the red rocky plateaus and outcrops.,128.0,150.0,0.9999,0.0,fg,fg_confident_wrong
+9849,QN-ft-c0WZQ_360.0_510.0,A press conference is being held at the office of the Rockland County with a grey haired man speaking.,64.0,98.0,0.9999,0.0,fg,fg_confident_wrong
+5584,cJ8kzdeoevg_360.0_510.0,Two people look at an art installation of a boy riding a motorcycle.,68.0,90.0,0.9998,0.0,fg,fg_confident_wrong
+8792,AVErftnrqwY_510.0_660.0,a man holding a coffee mug.,0.0,14.0,0.9998,0.0,fg,fg_confident_wrong
+9284,J4pIK7YehhQ_60.0_210.0,A fireman is standing on site reporting the situation on the ground near a firetruck on a road.,4.0,30.0,0.9998,0.0,fg,fg_confident_wrong
+4080,BVRBR8LSk9w_60.0_210.0,Brunette woman walks through a lobby with a woman with a hood.,0.0,36.0,0.9998,0.0,fg,fg_confident_wrong
+4203,ZxHh_2YdmT4_360.0_510.0,The vlogger shows a beach with no people.,0.0,50.0,0.9998,0.0,fg,fg_confident_wrong
+5217,pmGyw055pQg_360.0_510.0,Vlogger goes shopping for plants.,18.0,114.0,0.9998,0.0,fg,fg_confident_wrong
+8450,pmGyw055pQg_660.0_810.0,Shoes are lined up on the floor.,0.0,24.0,0.9998,0.0,fg,fg_confident_wrong
+1260,cL8ouoEZtKM_360.0_510.0,Man with backpack sets up a tripod.,4.0,20.0,0.9998,0.0,fg,fg_confident_wrong
+5671,hWr2e0vQaLA_210.0_360.0,Man with backpacks walks down a dirt road.,86.0,118.0,0.9998,0.0,fg,fg_confident_wrong
+32,XcJPd4NhhCs_360.0_510.0,Woman is stirring and eating her oatmeal.,130.0,146.0,0.9998,0.0,fg,fg_confident_wrong
+2205,P1iT-STRbYo_360.0_510.0,A lady rented a Scooty for her travel  to Auroville,14.0,48.0,0.9998,0.0,fg,fg_confident_wrong
+1555,a6NmGMEsCWM_210.0_360.0,The two women are walking outdoors while chatting.,114.0,138.0,0.9998,0.0,fg,fg_confident_wrong
+5986,cpkXphR7tVo_60.0_210.0,A young woman shows her kitchen and starts preparing grapefruit water,126.0,150.0,0.9998,0.0,fg,fg_confident_wrong
+8401,hoalP6K54Tk_660.0_810.0,A woman and a man ate a cake that she just baked.,126.0,150.0,0.9997,0.0,fg,fg_confident_wrong
+9779,HpLaAf1xhRA_60.0_210.0,People are injured in the back of trucks.,10.0,20.0,0.9997,0.0,fg,fg_confident_wrong
+8747,jdQ_zQJD0I4_660.0_810.0,A birthday is being celebrated in a club tinted with purple lighting.,24.0,38.0,0.9997,0.0,fg,fg_confident_wrong

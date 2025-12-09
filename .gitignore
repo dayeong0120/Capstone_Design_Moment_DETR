@@ -79,3 +79,5 @@ sftp.json
 # Python caches
 __pycache__/
 *.pyc
+
+logs_hungarian/

@@ -21,12 +21,12 @@ conda activate momentdetr
 echo "[INFO] Conda environment activated: $CONDA_DEFAULT_ENV"
 
 # ---------- 2️⃣ 경로 설정 ----------
-cd /data/hsg0113/repos/moment_detr/viz
+cd /data/hsg0113/repos/cap_detr/viz
 mkdir -p logs
 echo "[INFO] Working directory: $(pwd)"
 
 # ---------- 3️⃣ 출력 폴더 자동 생성 ----------
-OUTPUT_DIR="analysis_fg_bg2"
+OUTPUT_DIR="analysis_fg_bg5"
 if [ ! -d "$OUTPUT_DIR" ]; then
     mkdir -p "$OUTPUT_DIR"
     echo "[INFO] Created output directory: $OUTPUT_DIR"

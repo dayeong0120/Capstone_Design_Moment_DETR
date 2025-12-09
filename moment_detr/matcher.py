@@ -8,6 +8,8 @@ from torch import nn
 import torch.nn.functional as F
 from moment_detr.span_utils import generalized_temporal_iou, span_cxw_to_xx
 
+import moment_detr.logging_state as LOG
+
 """
 문제 상황: 하나의 영상에서 모델이 num_queries개(보통 10개 정도)의 구간(스팬)을 예측하고, GT(정답 스팬)는 보통 그보다 적은 개수 존재
 
@@ -92,6 +94,43 @@ class HungarianMatcher(nn.Module):
         # 각 query에 대해 softmax로 클래스 확률 계산 
         # 즉 out_prob[q] = [p_fg, p_bg]는 쿼리 q의 fg, bg일 확률 
         out_prob = outputs["pred_logits"].flatten(0, 1).softmax(-1)  # [batch_size * num_queries, num_classes]
+
+        # ------------------------------------------
+        # [추가] Query FG score 기록
+
+        # out_prob: shape [bs*num_queries, 2]
+        # reshape to [bs, num_queries, 2]
+        fg_scores = out_prob.view(bs, num_queries, 2)[..., 1]   # foreground score
+
+        # 초기화: 쿼리 개수에 맞춰 리스트 생성
+        if LOG.QUERY_FG_SCORES is None:
+            LOG.QUERY_FG_SCORES = [[] for _ in range(num_queries)]
+
+        # 각 batch & query별 score 누적
+        for b in range(bs):
+            for q in range(num_queries):
+                LOG.QUERY_FG_SCORES[q].append(float(fg_scores[b, q]))
+        # ------------------------------------------
+        # [추가] Query별 예측 구간의 중심값 및 길이 기록
+        pred_spans = outputs["pred_spans"]  # (bs, num_queries, 2)
+        span_centers  = pred_spans[..., 0]        # (bs, num_queries)
+        span_lengths = pred_spans[..., 1]   # (bs, num_queries)
+
+        # 전역 버퍼 초기화
+        if LOG.QUERY_SPAN_CX is None:
+            LOG.QUERY_SPAN_CX = [[] for _ in range(num_queries)]
+
+        if LOG.QUERY_SPAN_LEN is None:
+            LOG.QUERY_SPAN_LEN = [[] for _ in range(num_queries)]
+        
+        # 배치별로 기록
+        for b in range(bs):
+            for q in range(num_queries):
+                cx = float(span_centers[b, q])
+                length = float(span_lengths[b, q])
+                LOG.QUERY_SPAN_CX[q].append(cx)
+                LOG.QUERY_SPAN_LEN[q].append(length)
+        # ------------------------------------------
 
         # 모든 배치의 GT 스팬을 하나로 이어붙임. 즉 tgt_spans은 (총 target 스팬의 개수, 2) 
         tgt_spans = torch.cat([v["spans"] for v in targets])  # [num_target_spans in batch, 2]
@@ -217,7 +256,145 @@ class HungarianMatcher(nn.Module):
             video0의 query3는 GT span0으로 매칭 
         """
         indices = [linear_sum_assignment(c[i]) for i, c in enumerate(C.split(sizes, -1))]
-        
+
+        # ======== [추가: predicted spans 계산] ========
+        # outputs["pred_spans"] shape = (bs, num_queries, 2) = [cx, w]
+        pred_cx = outputs["pred_spans"][..., 0]  # (bs, num_queries)
+        pred_w  = outputs["pred_spans"][..., 1]  # (bs, num_queries)
+
+        # convert to start/end
+        pred_start = pred_cx - pred_w / 2
+        pred_end   = pred_cx + pred_w / 2
+        # ============================================
+
+        # ------------------------------------------
+        # [추가] IoU 높지만 매칭되지 않은 query 기록
+        IOU_THRESH = 0.5
+
+        iou_mismatch_list = []  # 이번 매칭 결과에서 발견된 mismatch를 저장할 리스트
+        # 쿼리 mismatch 카운트 초기화
+        if LOG.QUERY_MISMATCH_COUNT is None:
+            LOG.QUERY_MISMATCH_COUNT = [0 for _ in range(num_queries)]
+
+        # cost_giou는 "-IoU" 형태의 값이므로 반대로 부호를 바꾸면 IoU 값이 됨
+        # cost_giou shape: (bs * num_queries, total_spans)
+        # reshape해서 batch 단위로 보기 쉽게 만들기
+        giou_mat = -cost_giou.view(bs, num_queries, -1)  
+        # 즉 giou_mat[b][q][gi] = batch b, query q, GT gi 사이의 IoU 값
+
+        # 각 cost도 batch 단위로 보기 쉽게 reshape (비교/기록용)
+        cost_class_b = cost_class.view(bs, num_queries, -1)
+        cost_span_b  = cost_span.view(bs, num_queries, -1)
+        cost_giou_b  = cost_giou.view(bs, num_queries, -1)
+        C_b          = C  # 최종 cost matrix는 이미 (bs, num_queries, total_spans) 형태
+
+        prob_3d = outputs["pred_logits"].softmax(-1) # 로깅시에는 out_prob대신 사용 [bs, Q, C]
+
+        # 각 배치마다 반복
+        for b, (pred_idx, tgt_idx) in enumerate(indices):
+
+            # GT gi → matched query q_matched 매핑
+            matched_query_for_gt = {
+                gi.item(): q.item() for q, gi in zip(pred_idx, tgt_idx)
+            }
+
+            # 이번 배치의 GT 개수
+            num_gt = len(targets[b]["spans"])
+            #  batch b의 GT column 시작
+            start_col = sum(sizes[:b])
+
+            # GT 기준으로 mismatch 탐지
+            for gi in range(num_gt):
+            
+                # 이 GT에 실제로 매칭된 query
+                q_matched = matched_query_for_gt.get(gi, None)
+                if q_matched is None:
+                    continue
+                
+                # 현재 GT의 열 인덱스 
+                col = start_col + gi
+                
+                # 매칭된 쿼리의 IoU
+                iou_matched = float(giou_mat[b, q_matched, col])
+
+                # 모든 query에 대해 검사
+                for q in range(num_queries):
+                    # 이미 매칭된 query는 mismatch 후보 아님 → skip
+                    if q == q_matched:
+                        continue
+
+                    # 이 query가 다른 GT에 매칭된 경우 skip
+                    if q in matched_query_for_gt.values():
+                        continue
+
+                    iou_q = float(giou_mat[b, q, col])
+
+                    # mismatch 조건
+                    if iou_q > iou_matched + 0.1:
+                        LOG.QUERY_MISMATCH_COUNT[q] += 1 
+
+                        # 관심 쿼리만 상세 기록
+                        if LOG.WIDE_QUERY_FINAL is not None and q == LOG.WIDE_QUERY_FINAL:
+                            # 정렬을 위해 미리 필요한 diff 값들 계산
+                            iou_diff  = iou_q - iou_matched
+                            fg_diff   = float(prob_3d[b, q, 1]) - float(prob_3d[b, q_matched, 1])
+                            cost_diff = float(C_b[b, q, col]) - float(C_b[b, q_matched, col])
+
+                            # 상세 cost breakdown 포함해서 기록
+                            iou_mismatch_list.append({
+                                "batch": b, # 배치 index
+                                "query": q, # 매칭 실패한 query index
+                                "matched_query_index": int(q_matched),
+
+                                "gt": col, # IoU가 높은 GT index
+                                "iou_q": iou_q, # IoU 값
+                                "iou_matched": iou_matched,
+                                "iou_diff": iou_diff,     # ⭐ 정렬용 필드 1
+                                
+                                "class_cost_q":       float(cost_class_b[b, q, col]),
+                                "class_cost_matched": float(cost_class_b[b, q_matched, col]),
+
+                                "l1_cost_q":          float(cost_span_b[b, q, col]),
+                                "l1_cost_matched":    float(cost_span_b[b, q_matched, col]),
+
+                                "giou_cost_q":        float(cost_giou_b[b, q, col]),
+                                "giou_cost_matched":  float(cost_giou_b[b, q_matched, col]),
+
+                                "final_cost_q":       float(C_b[b, q, col]),
+                                "final_cost_matched": float(C_b[b, q_matched, col]),
+                                "cost_diff": cost_diff,   # ⭐ 정렬용 필드 2
+                                # ===== predicted span (this query) =====
+                                "pred_span_q": [
+                                    float(pred_start[b, q]),
+                                    float(pred_end[b, q])
+                                ],
+                                "pred_cx_q": float(pred_cx[b, q]),
+                                "pred_w_q":  float(pred_w[b, q]),
+
+                                # ===== matched query의 predicted span =====
+                                "pred_span_matched": [
+                                    float(pred_start[b, q_matched]),
+                                    float(pred_end[b, q_matched])
+                                ],
+                                "pred_cx_matched": float(pred_cx[b, q_matched]),
+                                "pred_w_matched":  float(pred_w[b, q_matched]),
+
+                                # ===== GT span =====
+                                "gt_span": [
+                                    float(targets[b]["spans"][gi][0]),
+                                    float(targets[b]["spans"][gi][1])
+                                ],
+
+                                # FG score 비교
+                                "fg_score_q": float(prob_3d[b, q, 1]),  # Query 0의 FG score
+                                "fg_score_matched": float(prob_3d[b, q_matched, 1]),  # matched query의 FG score
+                                "fg_diff": fg_diff
+                            })
+
+            # Option 1: 전역 리스트에 저장 (추천)
+            LOG.IOU_MISMATCH_BUFFER.extend(iou_mismatch_list)
+        # ------------------------------------------
+
         # 이 numpy 배열들을 torch 텐서로 감싸서 반환
         return [(torch.as_tensor(i, dtype=torch.int64), torch.as_tensor(j, dtype=torch.int64)) for i, j in indices]
 
