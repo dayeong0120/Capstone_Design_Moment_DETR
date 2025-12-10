@@ -117,9 +117,9 @@ class BaseOptions(object):
         parser.add_argument("--contrastive_align_loss", action="store_true",
                             help="Disable contrastive_align_loss between matched query spans and the text.")
         # * Matcher
-        parser.add_argument('--set_cost_span', default=5, type=float,
+        parser.add_argument('--set_cost_span', default=8, type=float,
                             help="L1 span coefficient in the matching cost")
-        parser.add_argument('--set_cost_giou', default=0.5, type=float,
+        parser.add_argument('--set_cost_giou', default=1, type=float,
                             help="giou span coefficient in the matching cost")
         parser.add_argument('--set_cost_class', default=4, type=float,
                             help="Class coefficient in the matching cost")
