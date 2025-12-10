@@ -65,7 +65,9 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
     LOG.matching_hist_aux = None
     LOG.IOU_MISMATCH_BUFFER = [] 
     LOG.QUERY_MISMATCH_COUNT = None
+    LOG.QUERY_MISMATCH_TOP1_IOU_COUNT = None
     LOG.QUERY_FG_SCORES = None
+    LOG.QUERY_FG_LOGIT = None
 
     LOG.DELTA_FG_MATCHED = None
     LOG.DELTA_FG_UNMATCHED = None
@@ -429,12 +431,36 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         # ====== (2) IoU mismatch 로그 파일 ======
         if LOG.IOU_MISMATCH_BUFFER is not None and len(LOG.IOU_MISMATCH_BUFFER) > 0:
 
-            # IoU diff 기준 정렬 (넓은 쿼리 문제 분석에 가장 의의 있음)
-            LOG.IOU_MISMATCH_BUFFER.sort(key=lambda x: x["iou_diff"], reverse=True)
+            MAX_TOTAL = 100         # 전체 최대 100개
+            MIN_PER_QUERY = 5       # 쿼리당 최소 5개 (원하면 조정)
 
-            # top-K만 남긴다 (너가 원하는 숫자로 조절 가능)
-            TOP_K = 100
-            LOG.IOU_MISMATCH_BUFFER = LOG.IOU_MISMATCH_BUFFER[:TOP_K]
+            # 쿼리별 버킷 만들기
+            per_query = {q: [] for q in range(num_queries)}
+            for item in LOG.IOU_MISMATCH_BUFFER:
+                q = item["query"]
+                per_query[q].append(item)
+
+            # 쿼리별 셔플
+            for q in per_query:
+                random.shuffle(per_query[q])
+
+            final_samples = []
+
+            # 1) 쿼리별 최소 개수 확보
+            for q in range(num_queries):
+                final_samples.extend(per_query[q][:MIN_PER_QUERY])
+
+            # 2) 나머지를 전체에서 균등 랜덤추출
+            remaining = []
+            for q in range(num_queries):
+                remaining.extend(per_query[q][MIN_PER_QUERY:])
+
+            random.shuffle(remaining)
+            need = MAX_TOTAL - len(final_samples)
+            if need > 0:
+                final_samples.extend(remaining[:need])
+
+            LOG.IOU_MISMATCH_BUFFER = final_samples
         
         mismatch_path = f"{exp_dir}/epoch_iou_mismatch_{epoch_i}.jsonl"
         with open(mismatch_path, "w") as f2:
