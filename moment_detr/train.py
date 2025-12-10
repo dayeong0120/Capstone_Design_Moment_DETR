@@ -433,6 +433,8 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
 
             MAX_TOTAL = 100         # 전체 최대 100개
             MIN_PER_QUERY = 5       # 쿼리당 최소 5개 (원하면 조정)
+            
+            num_queries = LOG.NUM_QUERIES
 
             # 쿼리별 버킷 만들기
             per_query = {q: [] for q in range(num_queries)}
