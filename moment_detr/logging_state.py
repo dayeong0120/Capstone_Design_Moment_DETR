@@ -1,6 +1,7 @@
 
 # ---- Logging buffers shared across matcher & train ----
 LOG_EPOCHS = {0, 1, 2, 3, 5, 7, 10, 20, 50, 100, 150, 199}
+NUM_QUERIES = None
 matching_hist = None       # 각 epoch의 매칭 히스토그램
 matching_hist_aux = None
 is_training_phase = False  # 훈련 단계 여부

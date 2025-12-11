@@ -98,6 +98,8 @@ class HungarianMatcher(nn.Module):
         # ------------------------------------------
         # [추가] Query FG score 기록 + FG logit 기록
 
+        LOG.NUM_QUERIES = num_queries
+        
         # out_prob: shape [bs*num_queries, 2]
         # reshape to [bs, num_queries, 2]
         fg_scores = out_prob.view(bs, num_queries, 2)[..., 1]   # foreground score
