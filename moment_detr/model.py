@@ -155,7 +155,11 @@ class SetCriterion(nn.Module):
     """
 
     def __init__(self, matcher, weight_dict, eos_coef, losses, temperature, span_loss_type, max_v_l,
-                 saliency_margin=1):
+                 saliency_margin=1,
+                # [추가] IoU top-k auxiliary span loss 관련 하이퍼파라미터
+                 topk_iou_aux=2,          # 각 GT당 추가로 잡을 query 개수 (k)
+                 topk_iou_thresh=0.5,     # 이 IoU 이상인 query만 aux supervision
+                 topk_iou_coef=0.3):      # 기존 span/giou loss에 섞는 비율):
         """ Create the criterion.
         Parameters:
             matcher: module able to compute a matching between targets and proposals
@@ -175,6 +179,11 @@ class SetCriterion(nn.Module):
         self.span_loss_type = span_loss_type
         self.max_v_l = max_v_l
         self.saliency_margin = saliency_margin
+        
+        # [추가] IoU top-k auxiliary span loss 설정
+        self.topk_iou_aux = topk_iou_aux
+        self.topk_iou_thresh = topk_iou_thresh
+        self.topk_iou_coef = topk_iou_coef
 
         # foreground and background classification
         self.foreground_label = 0
@@ -183,6 +192,159 @@ class SetCriterion(nn.Module):
         empty_weight = torch.ones(2)
         empty_weight[-1] = self.eos_coef  # lower weight for background (index 1, foreground index 0)
         self.register_buffer('empty_weight', empty_weight)
+
+    # [추가] IoU top-k auxiliary span loss 함수
+    def _compute_topk_aux_span_loss(self, outputs, targets, indices):
+        """
+        Hungarian main match 외에, 각 GT에 대해
+        IoU가 높은 query top-k에도 약한 span / giou loss를 주는 함수.
+
+        outputs: dict, "pred_spans": [B, Q, 2] (cx, w)
+        targets: list of dicts (이미 targets["span_labels"]가 들어온 상태)
+        indices: list of (src_idx, tgt_idx) from matcher
+
+        return: (aux_l1, aux_giou) 두개의 loss 텐서 
+        """
+
+        # 설정에 따라 아예 끄는 경우
+        if self.topk_iou_aux <= 0 or self.span_loss_type != "l1":
+            # outputs["pred_spans"]와 같은 device, 같은 dtype을 가진 스칼라 0 텐서 생성
+            zero = outputs["pred_spans"].new_tensor(0.) 
+            # aux loss를 안쓰겠다는 의미로 둘 다 0인 텐서를 돌려줌 
+            return zero, zero
+        
+        pred_spans = outputs["pred_spans"]          # [B, Q, 2]
+        # DETR 스타일로 전체 GT 개수로 normalization하기 위한 변수 
+        # num_boxes : 배치 전체에 있는 GT 스팬의 총 개수 
+        num_boxes = sum(len(t["spans"]) for t in targets)
+        if num_boxes == 0:
+            zero = pred_spans.new_tensor(0.)
+            return zero, zero
+        num_boxes = float(num_boxes) 
+
+        # 보조 loss들을 다 더해서 모아둘 누적 변수 (초기값 0)
+        total_l1 = pred_spans.new_tensor(0.)
+        total_giou = pred_spans.new_tensor(0.)
+
+        # 배치 차원(B)에 대해 하나씩 처리
+        # indices는 길이 B인 리스트, 각 원소는 (src_idx, tgt_idx) 튜플
+        #   src_idx: 이 샘플에서 매칭된 query 인덱스들
+        #   tgt_idx: 그 query들이 매칭된 GT 인덱스들
+        for b, (src_idx, tgt_idx) in enumerate(indices):
+            # b번째 샘플(영상)의 GT span들: [G, 2] (cx, w)
+            tgt_spans_b = targets[b]["spans"]
+            # 이 샘플에 GT가 없으면 스킵
+            if tgt_spans_b.numel() == 0:
+                continue
+
+            # b번째 샘플의 예측 span들: [Q, 2] (cx, w)
+            pred_spans_b = pred_spans[b]
+            # G: 이 샘플의 GT 개수
+            G = tgt_spans_b.shape[0]
+
+            # 예측 span과 GT span을 (start, end) 형식으로 변환
+            # span_cxw_to_xx: (cx, w) → (start, end)
+            pred_xx = span_cxw_to_xx(pred_spans_b)   # [Q, 2]
+            tgt_xx = span_cxw_to_xx(tgt_spans_b)     # [G, 2]
+
+            # generalized_temporal_iou:
+            #   입력: [Q, 2], [G, 2]
+            #   출력: [Q, G]  (각 query-각 GT 쌍의 GIoU 값)
+            # 각 쿼리와 GT사이의 GIoU값을 계산한 행렬 
+            iou_mat = generalized_temporal_iou(pred_xx, tgt_xx)  # [Q, G] 
+
+            # Hungarian 결과로부터
+            #   "각 GT 인덱스 gi → 그 GT에 매칭된 query 인덱스 qi" 매핑 딕셔너리 생성
+            # src_idx, tgt_idx 텐서를 list로 바꿔서 zip으로 묶어줌
+            main_for_gt = {
+                int(gi): int(qi)
+                for qi, gi in zip(src_idx.tolist(), tgt_idx.tolist())
+            }
+
+            # 이미 다른 GT에 매칭된 query들의 집합 (aux 후보에서 제외할 용도)
+            matched_queries = set(main_for_gt.values())
+
+            # 이 샘플의 모든 GT(gi=0..G-1)에 대해 반복
+            for gi in range(G):
+                # 이 GT가 Hungarian에서 아예 매칭 안 됐으면 (드문 케이스) 보조 loss도 줄 수 없으니 스킵
+                if gi not in main_for_gt:
+                    continue
+
+                # 이 GT에 main match된 query 인덱스
+                q_main = main_for_gt[gi]
+
+                # 이 GT 컬럼에 대한 IoU 값: [Q]  (각 query가 이 GT와 가지는 IoU)
+                iou_col = iou_mat[:, gi].clone() # 특정 GT gi에 대해, 모든 query의 IoU를 가져오는 것
+
+                # main matched query는 보조 후보에서 제외 (이미 strong supervision 받는 애니까)
+                iou_col[q_main] = -1.0
+
+                # (옵션) 다른 GT에 이미 매칭된 query들도 aux 후보에서 제외
+                #   → 하나의 query가 여러 GT의 aux positive가 되는 걸 막기 위함
+                for q_other in matched_queries:
+                    if q_other != q_main:
+                        iou_col[q_other] = -1.0
+
+                # IoU가 threshold보다 큰 query만 보조 후보로 사용
+                valid_mask = iou_col > self.topk_iou_thresh
+                # threshold 이상인 후보가 하나도 없으면 이 GT는 스킵
+                if valid_mask.sum() == 0:
+                    continue
+
+                # valid_mask가 True인 인덱스들만 모은다: [M]
+                # 즉, IoU가 threshold이상인 쿼리의 인덱스만 저장 
+                valid_idx = torch.nonzero(valid_mask, as_tuple=False).squeeze(1)
+
+                # 그 중에서 IoU 값이 큰 순서대로 top-k 개 선택
+                # 뽑을 수 있는 만큼만 뽑고, 더는 안 뽑는다.
+                k = min(self.topk_iou_aux, int(valid_idx.numel()))
+                # valid한 애들 중에서만 topk를 뽑기 위해 iou_col[valid_idx] 사용
+                #  iou_col[valid_idx] 는 valid_idx 쿼리들의 iou값을 배열로 저장 
+                # topk_vals는 실제 top-k의 IoU값 배열, topk_pos는 top-k쿼리의 인덱스 
+                topk_vals, topk_pos = torch.topk(iou_col[valid_idx], k)
+                # topk_pos는 valid_idx의 인덱스이므로, 실제 쿼리 인덱스로 바꿔주기 
+                """
+                valid_idx = [0, 2, 4]
+                topk_pos  = [0, 1]
+
+                aux_q_idx = [ valid_idx[0], valid_idx[1] ]
+                aux_q_idx = [ 0, 2 ]
+                """
+                aux_q_idx = valid_idx[topk_pos]  # [k']
+
+                # 혹시라도 k가 0이 되는 경우 방어
+                if aux_q_idx.numel() == 0:
+                    continue
+
+                # 보조 supervision을 줄 예측 span들: [k', 2] (cx, w)
+                aux_pred = pred_spans_b[aux_q_idx]
+                # 이 GT span을 aux_pred 개수만큼 복제: [k', 2]
+                gt_span = tgt_spans_b[gi].unsqueeze(0).expand_as(aux_pred)
+
+                # L1 보조 loss: (sum으로 누적, 나중에 전체 GT 개수로 나눠서 평균)
+                l1 = F.l1_loss(aux_pred, gt_span, reduction="sum")
+
+                # GIoU 보조 loss 계산
+                #   1) (cx, w) → (start, end)로 변환
+                aux_xx = span_cxw_to_xx(aux_pred)      # [k', 2]
+                gt_xx_rep = span_cxw_to_xx(gt_span)    # [k', 2]
+                #   2) generalized_temporal_iou([k',2], [k',2]) → [k', k'] 행렬이 나오므로
+                #      각 쌍의 대각(diagonal)만 뽑아서 1:1 매칭으로 본다
+                giou_vec = generalized_temporal_iou(aux_xx, gt_xx_rep).diag()  # [k']
+                #   3) GIoU loss = 1 - GIoU
+                giou_loss = (1.0 - giou_vec).sum()
+
+                # 배치 전체 보조 loss에 누적
+                total_l1 += l1
+                total_giou += giou_loss
+
+        # 배치 전체 GT 개수로 나눠서 평균 loss로 스케일 맞추기
+        total_l1 = total_l1 / num_boxes
+        total_giou = total_giou / num_boxes
+
+        # aux L1 loss와 aux GIoU loss 반환
+        return total_l1, total_giou
+
 
     def loss_spans(self, outputs, targets, indices):
         """Compute the losses related to the bounding boxes, the L1 regression loss and the GIoU loss
@@ -214,6 +376,17 @@ class SetCriterion(nn.Module):
         losses = {}
         losses['loss_span'] = loss_span.mean()
         losses['loss_giou'] = loss_giou.mean()
+
+        # [추가] IoU top-k auxiliary span loss
+        #  - span_loss_type == "l1" 일 때만 의미 있음
+        #  - self.topk_iou_aux <= 0 이면 _compute_topk_aux_span_loss 안에서 그냥 0 리턴
+        if self.span_loss_type == "l1" and self.topk_iou_aux > 0:
+            # 여기서의 targets는 이미 targets["span_labels"]로 바뀐 상태 (위에서 한 줄)
+            aux_l1, aux_giou = self._compute_topk_aux_span_loss(outputs, targets, indices)
+            losses['loss_span'] = losses['loss_span'] + self.topk_iou_coef * aux_l1
+            losses['loss_giou'] = losses['loss_giou'] + self.topk_iou_coef * aux_giou
+
+        
         return losses
 
     def loss_labels(self, outputs, targets, indices, log=True):
@@ -523,7 +696,11 @@ def build_model(args):
         matcher=matcher, weight_dict=weight_dict, losses=losses,
         eos_coef=args.eos_coef, temperature=args.temperature,
         span_loss_type=args.span_loss_type, max_v_l=args.max_v_l,
-        saliency_margin=args.saliency_margin
+        saliency_margin=args.saliency_margin,
+         # [추가] IoU top-k aux span loss 하이퍼파라미터
+        topk_iou_aux=2,          # 각 GT당 IoU 높은 query 2개까지 보조 supervision
+        topk_iou_thresh=0.3,     # IoU 0.5 이상만 대상
+        topk_iou_coef=0.2        # 기존 loss에 0.3 비율로 섞기
     )
     criterion.to(device)
     return model, criterion
