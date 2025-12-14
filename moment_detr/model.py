@@ -698,9 +698,9 @@ def build_model(args):
         span_loss_type=args.span_loss_type, max_v_l=args.max_v_l,
         saliency_margin=args.saliency_margin,
          # [추가] IoU top-k aux span loss 하이퍼파라미터
-        topk_iou_aux=2,          # 각 GT당 IoU 높은 query 2개까지 보조 supervision
-        topk_iou_thresh=0.3,     # IoU 0.5 이상만 대상
-        topk_iou_coef=0.2        # 기존 loss에 0.3 비율로 섞기
+        topk_iou_aux=1,          # 각 GT당 IoU 높은 query 2개까지 보조 supervision
+        topk_iou_thresh=0.6,     # IoU 0.5 이상만 대상
+        topk_iou_coef=0.15        # 기존 loss에 0.3 비율로 섞기
     )
     criterion.to(device)
     return model, criterion
