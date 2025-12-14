@@ -157,9 +157,9 @@ class SetCriterion(nn.Module):
     def __init__(self, matcher, weight_dict, eos_coef, losses, temperature, span_loss_type, max_v_l,
                  saliency_margin=1,
                 # [추가] IoU top-k auxiliary span loss 관련 하이퍼파라미터
-                 topk_iou_aux=2,          # 각 GT당 추가로 잡을 query 개수 (k)
-                 topk_iou_thresh=0.5,     # 이 IoU 이상인 query만 aux supervision
-                 topk_iou_coef=0.3):      # 기존 span/giou loss에 섞는 비율):
+                 topk_iou_aux=1,          # 각 GT당 추가로 잡을 query 개수 (k)
+                 topk_iou_thresh=0.6,     # 이 IoU 이상인 query만 aux supervision
+                 topk_iou_coef=0.15):      # 기존 span/giou loss에 섞는 비율):
         """ Create the criterion.
         Parameters:
             matcher: module able to compute a matching between targets and proposals
