@@ -224,6 +224,36 @@ class SetCriterion(nn.Module):
         # ㄴ 매칭된 쿼리 = foreground, 나머지 쿼리 = background로 처리
         assert 'pred_logits' in outputs
         src_logits = outputs['pred_logits']  # (batch_size, #queries, #classes=2)
+
+        # -------------------------------------------------
+        # 2. 예측된 span에서 width(w) 계산
+        #    pred_spans는 (cx, w) 형태로 [0,1] 정규화됨
+        # -------------------------------------------------
+        pred_spans = outputs['pred_spans']          # (bs, num_queries, 2)
+        pred_w = pred_spans[..., 1]                 # (bs, num_queries)
+
+        # -------------------------------------------------
+        # 3. width-aware FG gating 계산
+        #    - 폭이 넓을수록 gate ↓
+        #    - sigmoid 사용 → hard threshold 회피
+        # -------------------------------------------------
+        w_ref = 0.5      # 기준 폭 (데이터셋 평균 GT width 근처 추천)
+        beta = 10.0      # 기울기 (클수록 넓은 span을 강하게 억제)
+
+        # gate ∈ (0,1), narrow span ≈ 1, wide span ≈ 0
+        width_gate = torch.sigmoid(beta * (w_ref - pred_w))
+
+        # -------------------------------------------------
+        # 4. FG logit만 width-aware하게 보정
+        #    BG logit은 건드리지 않음
+        # -------------------------------------------------
+        adjusted_logits = src_logits.clone()
+
+        # foreground logit (index 0)에만 gate 적용
+        adjusted_logits[..., 0] = adjusted_logits[..., 0] * width_gate
+
+        # -------------------------------------------------
+        # 5. 이후 과정은 기존과 동일
         # idx is a tuple of two 1D tensors (batch_idx, src_idx), of the same length == #objects in batch
         # ㄴ _get_src_permutation_idx(indices)는 indices에서 예측 쪽 인덱스만 뽑아서,
         # 두 개의 1D 텐서 (batch_idx, src_idx)로 바꿔줌 
@@ -256,13 +286,13 @@ class SetCriterion(nn.Module):
                 [0.6, 0.1, 0.9, 0.4, 0.2],    # batch 1의 각 query 손실
             ]
         """
-        loss_ce = F.cross_entropy(src_logits.transpose(1, 2), target_classes, self.empty_weight, reduction="none")
+        loss_ce = F.cross_entropy(adjusted_logits.transpose(1, 2), target_classes, self.empty_weight, reduction="none")
         # 각 query의 loss를 하나의 스칼라로 평균
         losses = {'loss_label': loss_ce.mean()}
 
         if log:
             # TODO this should probably be a separate loss, not hacked in this one here
-            losses['class_error'] = 100 - accuracy(src_logits[idx], self.foreground_label)[0]
+            losses['class_error'] = 100 - accuracy(adjusted_logits[idx], self.foreground_label)[0]
         return losses
 
     def loss_saliency(self, outputs, targets, indices, log=True):

@@ -117,6 +117,18 @@ def train_epoch(model, criterion, train_loader, optimizer, opt, epoch_i, tb_writ
         # ----------- 모델 forward (모델에 입력 넣어 예측 결과 생성 및 loss 계산) -----------
         timer_start = time.time()
         outputs = model(**model_inputs)  # 모델에 입력을 넣어 예측 결과(outputs) 생성
+
+        # [DEBUG] width-aware FG gate 평균 로깅용
+        if "pred_spans" in outputs:
+            pred_w = outputs["pred_spans"][..., 1]              # (bs, num_queries)
+            w_ref = 0.5
+            beta = 10.0
+            width_gate = torch.sigmoid(beta * (w_ref - pred_w))
+            debug_width_gate = width_gate.mean().item()
+
+            # TensorBoard에 기록 (선택)
+            tb_writer.add_scalar("Debug/width_gate_mean", debug_width_gate, epoch_i+1)
+
         # criterion을 통해 outputs와 targets로부터 개별 loss 항목들을 계산 (dict 형태)
         loss_dict = criterion(outputs, targets)
         weight_dict = criterion.weight_dict # 각 loss에 곱해줄 가중치 딕셔너리. weight_dict 안에는 aux loss weight도 들어있다
