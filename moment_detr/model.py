@@ -247,10 +247,12 @@ class SetCriterion(nn.Module):
         # 4. FG logit만 width-aware하게 보정
         #    BG logit은 건드리지 않음
         # -------------------------------------------------
-        adjusted_logits = src_logits.clone()
+        # FG logit만 width-aware하게 보정 (inplace 아님)
+        fg_logit = src_logits[..., 0] * width_gate          # 새 텐서
+        bg_logit = src_logits[..., 1]                        # 그대로 사용
 
-        # foreground logit (index 0)에만 gate 적용
-        adjusted_logits[..., 0] = adjusted_logits[..., 0] * width_gate
+        # 두 logit을 새 텐서로 다시 stack
+        adjusted_logits = torch.stack([fg_logit, bg_logit], dim=-1)
 
         # -------------------------------------------------
         # 5. 이후 과정은 기존과 동일
