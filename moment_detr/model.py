@@ -237,8 +237,8 @@ class SetCriterion(nn.Module):
         #    - 폭이 넓을수록 gate ↓
         #    - sigmoid 사용 → hard threshold 회피
         # -------------------------------------------------
-        w_ref = 0.5      # 기준 폭 (데이터셋 평균 GT width 근처 추천)
-        beta = 10.0      # 기울기 (클수록 넓은 span을 강하게 억제)
+        w_ref = 0.6      # 기준 폭 (데이터셋 평균 GT width 근처 추천)
+        beta = 5.0      # 기울기 (클수록 넓은 span을 강하게 억제)
 
         # gate ∈ (0,1), narrow span ≈ 1, wide span ≈ 0
         width_gate = torch.sigmoid(beta * (w_ref - pred_w))
